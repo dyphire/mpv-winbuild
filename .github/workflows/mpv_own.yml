@@ -65,7 +65,7 @@ jobs:
         with:
           artifacts: "mpv-winbuild-cmake/release/*.7z"
           commit: main
-          name: "MPV ${{ env.long_time }} ${{ env.sha }}"
+          name: "MPV_OWN ${{ env.long_time }} ${{ env.sha }}"
           body: "MPV git commit: https://github.com/mpv-player/mpv/commit/${{ steps.get_sha.outputs.sha }}\nBuild Time: ${{ env.long_time }}"
           tag: "mpv_own-${{ env.short_time }}"
           allowUpdates: true
