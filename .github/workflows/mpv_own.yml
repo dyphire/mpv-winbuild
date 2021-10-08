@@ -61,13 +61,8 @@ jobs:
         with:
           path: mpv-winbuild-cmake/release/*.7z
 
-      - name: 'Current Time'
-        run: |
-          export TZ='Asia/Shanghai'
-          echo "long_time=$(date "+%Y-%m-%d-%H:%M:%S")" >> $GITHUB_ENV
-          echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
-          echo "sha=$(expr substr "${{ steps.get_sha.outputs.sha }}" 1 7)" >> $GITHUB_ENV
-      - uses: ncipollo/release-action@v1
+      - name: Create release
+        uses: ncipollo/release-action@v1
         if: ${{ steps.upload.outcome == 'success' }}
         with:
           artifacts: "mpv-winbuild-cmake/release/*.7z"
