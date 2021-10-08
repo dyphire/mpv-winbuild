@@ -2,13 +2,14 @@
 set -x
 
 main() {
-    export TZ='Asia/Shanghai'
     dependency
     local branch="gcc10"
     dependency
     if [ -d mpv-winbuild-cmake ] ; then
         git  clone https://github.com/dyphire/mpv-winbuild-cmake.git temp
+        shopt -s dotglob
         mv -f temp/* mpv-winbuild-cmake/
+        shopt -u dotglob
         sudo rm -rf temp
     else
         git clone https://github.com/dyphire/mpv-winbuild-cmake.git
