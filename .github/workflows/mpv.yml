@@ -6,7 +6,7 @@ on:
 #    - cron: '0 2 * * Sun'
 
 jobs:
-  build:
+  build_mpv:
     name: Build MPV
     runs-on: ubuntu-latest
     strategy:
@@ -26,14 +26,21 @@ jobs:
         uses: mego22/actions-git-sha@main
         with:
           repo: "https://github.com/shinchiro/mpv-winbuild-cmake.git"
+      - name: Get current time
+        run: |
+          export TZ='Asia/Shanghai'
+          echo "long_time=$(date "+%Y-%m-%d %H:%M")" >> $GITHUB_ENV
+          echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
+          echo "sha=$(expr substr "${{ steps.get_sha.outputs.sha }}" 1 7)" >> $GITHUB_ENV
       
       - name: Cache
         uses: actions/cache@v2
         with:
           path: mpv-winbuild-cmake/build${{ matrix.bit }}
-          key: ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ steps.build_sha.outputs.sha }}-${{ steps.get_sha.outputs.sha }}
+          key: ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ steps.build_sha.outputs.sha }}-${{ steps.get_sha.outputs.sha }}-${{ env.short_time }}
           restore-keys: |
-            ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ steps.build_sha.outputs.sha }}-
+            ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ steps.build_sha.outputs.sha }}-${{ steps.get_sha.outputs.sha }}
+            ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ steps.build_sha.outputs.sha }}
             ${{ runner.os }}-mpv-build${{ matrix.bit }}-
       - name: Build
         shell: bash
@@ -48,25 +55,27 @@ jobs:
 #             mpv-winbuild-cmake/build64/packages/mujs-prefix/src/mujs-stamp/mujs-build-*.log
 #             mpv-winbuild-cmake/build64/packages/libsrt-prefix/src/libsrt-stamp/libsrt-configure-*.log
 
-      - name: upload artifact
+      - name: Upload artifact
         id: upload
         uses: kittaakos/upload-artifact-as-is@master
         with:
           path: mpv-winbuild-cmake/release/*.7z
 
-      - name: 'Current Time'
-        run: |
-          export TZ='Asia/Shanghai'
-          echo "long_time=$(date "+%Y-%m-%d-%H:%M:%S")" >> $GITHUB_ENV
-          echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
-          echo "sha=$(expr substr "${{ steps.get_sha.outputs.sha }}" 1 7)" >> $GITHUB_ENV
-      - uses: ncipollo/release-action@v1
+      - name: Create release
+        uses: ncipollo/release-action@v1
         if: ${{ steps.upload.outcome == 'success' }}
         with:
           artifacts: "mpv-winbuild-cmake/release/*.7z"
           commit: main
-          name: "MPV ${{ env.long_time }} ${{ env.sha }}"
+          name: "MPV ${{ env.long_time }}"
           body: "MPV git commit: https://github.com/mpv-player/mpv/commit/${{ steps.get_sha.outputs.sha }}\nBuild Time: ${{ env.long_time }}"
           tag: "mpv-${{ env.short_time }}"
           allowUpdates: true
+          prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Prune old releases
+        shell: bash
+        run: |
+          sudo bash prunetags.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
