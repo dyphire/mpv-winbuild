@@ -2,7 +2,7 @@
 # source: https://github.com/BtbN/FFmpeg-Builds/blob/master/util/prunetags.sh
 set -e
 git fetch --tags
-TAGS=( $(git tag | sort -r) )
+TAGS=( $(git tag -l "mpv*-*" | sort -r) )
 
 KEEP_LATEST=14
 KEEP_MONTHLY=12
