@@ -2,8 +2,8 @@ name: MPV_OWN
 
 on: 
   workflow_dispatch:
-#  schedule:
-#    - cron: '0 2 * * Sun'
+  schedule:
+    - cron: '0 2 * * Sun'
 
 jobs:
   build_mpv:
