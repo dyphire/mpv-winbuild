@@ -71,7 +71,7 @@ jobs:
           body: "MPV git commit: https://github.com/mpv-player/mpv/commit/${{ steps.get_sha.outputs.sha }}\nBuild Time: ${{ env.long_time }}"
           tag: "mpv_own-${{ env.short_time }}"
           allowUpdates: true
-          prerelease: true
+          prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Prune old releases
         shell: bash
