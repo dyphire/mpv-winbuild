@@ -1,18 +1,32 @@
-name: Delete old workflow runs
+name: Clean workflows and releases
 on:
-  workflow_dispatch:
   schedule:
     - cron: '0 0 1 * *'
 # Run monthly, at 00:00 on the 1st day of month.
-
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Number of days.'
+        required: true
+        default: 90
 jobs:
+  Prune_releases:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: fregante/setup-git-user@v1
+      - name: Prune old releases
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          bash prunetags.sh
   del_runs:
     runs-on: ubuntu-latest
     steps:
       - name: Delete workflow runs
-        uses: ActionsRML/delete-workflow-runs@main
+        uses: Mattraks/delete-workflow-runs@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
-          retain_days: 30
-          keep_minimum_runs: 6
+          retain_days: ${{ github.event.inputs.days }}

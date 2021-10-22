@@ -4,17 +4,18 @@
 [![releases](https://img.shields.io/github/v/release/dyphire/mpv-winbuild)](https://github.com/dyphire/mpv-winbuild/releases)
 [![downloads](https://img.shields.io/github/downloads/dyphire/mpv-winbuild/total)](https://github.com/dyphire/mpv-winbuild/releases)
 
-forked from [zhongfly/mpv-build](https://github.com/zhongfly/mpv-build)
+Forked from [zhongfly/mpv-build](https://github.com/zhongfly/mpv-build)
 
 Use Github Action to build mpv-win with latest commit.
 
   - **MPV** Based on https://github.com/shinchiro/mpv-winbuild-cmake. [![mpv-winbuild-cmake](https://flat.badgen.net/github/last-commit/shinchiro/mpv-winbuild-cmake?scale=0.8&cache=1800)](https://github.com/shinchiro/mpv-winbuild-cmake)
 
   - **MPV_OWN** Based on https://github.com/dyphire/mpv-winbuild-cmake. [![mpv-winbuild-cmake](https://flat.badgen.net/github/last-commit/dyphire/mpv-winbuild-cmake?scale=0.8&cache=1800)](https://github.com/dyphire/mpv-winbuild-cmake) 
-     - **test**: build with libass from [dyphire/libass_dev](https://github.com/dyphire/libass/tree/dev), it may fix some problems for scaled with PlayResX
+     - **Test**: Build with libass from [dyphire/libass_dev](https://github.com/dyphire/libass/tree/dev), it may fix some problems for scaled with PlayResX
      - **Remember**: This is not perfect
 
 ## Auto-Builds
+
 Builds run at 08:00 UTC on Thu and Sun (or GitHubs idea of that time) and are automatically released on success.
 
 ### Release Retention Policy
@@ -23,7 +24,7 @@ Builds run at 08:00 UTC on Thu and Sun (or GitHubs idea of that time) and are au
 
 ## Information about packages
 
-same as [shinchiro](https://github.com/shinchiro/mpv-winbuild-cmake/blob/master/README.md#information-about-packages)
+Same as [shinchiro](https://github.com/shinchiro/mpv-winbuild-cmake/blob/master/README.md#information-about-packages)
 
 -   Git/Hg
     -   mpv [![mpv](https://flat.badgen.net/github/last-commit/mpv-player/mpv?scale=0.8&cache=1800)](https://github.com/mpv-player/mpv)
@@ -91,6 +92,6 @@ same as [shinchiro](https://github.com/shinchiro/mpv-winbuild-cmake/blob/master/
     -   libopenmpt (0.5.10)
     -   libiconv (1.16)
     -   gmp (6.2.1)
-    -   vapoursynth (R55)
+    -   vapoursynth (R57)
     -   libsdl2 (2.0.16)
     -   libressl (3.1.5)
