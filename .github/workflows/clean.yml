@@ -8,7 +8,7 @@ on:
       days:
         description: 'Number of days.'
         required: true
-        default: 90
+        default: 30
 jobs:
   Prune_releases:
     runs-on: ubuntu-latest
@@ -30,3 +30,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           retain_days: ${{ github.event.inputs.days }}
+          keep_minimum_runs: 8
