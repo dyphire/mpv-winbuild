@@ -18,6 +18,12 @@ Use Github Action to build mpv-win with latest commit.
 
 Builds run at 08:00 UTC on Thu and Sun (or GitHubs idea of that time) and are automatically released on success.
 
+This repo only provides 64-bit version. If you need a 32-bit version, you can fork this repo and edit mpv.yml.
+
+> `mpv-dev-x86_64-xxxx.7z` is 64-bit libmpv version, including the `mpv-1.dll` file.
+> 
+> Some media players based on libmpv will need `mpv-1.dll`.You can upgrade their built-in libmpv version by overwriting mpv-1.dll.
+
 ### Release Retention Policy
 - The last build of each month is kept for one years.
 - The last 14 weekly builds are kept.
