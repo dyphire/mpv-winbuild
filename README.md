@@ -4,7 +4,7 @@
 [![releases](https://img.shields.io/github/v/release/dyphire/mpv-winbuild)](https://github.com/dyphire/mpv-winbuild/releases)
 [![downloads](https://img.shields.io/github/downloads/dyphire/mpv-winbuild/total)](https://github.com/dyphire/mpv-winbuild/releases)
 
-Forked from [zhongfly/mpv-build](https://github.com/zhongfly/mpv-build)
+Forked from [zhongfly/mpv-winbuild](https://github.com/zhongfly/mpv-winbuild)
 
 Use Github Action to build mpv-win with latest commit.
 
