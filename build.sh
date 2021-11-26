@@ -3,7 +3,7 @@ set -x
 
 main() {
     dependency
-    local branch="patch"
+    local branch="gcc10"
     if [ -d mpv-winbuild-cmake ] ; then
         git  clone https://github.com/shinchiro/mpv-winbuild-cmake.git temp
         shopt -s dotglob
