@@ -3,6 +3,8 @@ set -x
 
 main() {
     dependency
+    git config --global user.name "github-actions[bot]"
+    git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
     local branch="gcc10"
     if [ -d mpv-winbuild-cmake ] ; then
         git  clone https://github.com/shinchiro/mpv-winbuild-cmake.git temp
@@ -32,9 +34,9 @@ main() {
 }
 
 dependency() {
-    sudo apt-get -qq update
-    sudo apt-get -qq install build-essential checkinstall bison flex gettext git mercurial subversion ninja-build gyp cmake yasm nasm automake pkg-config libtool libtool-bin gcc-multilib g++-multilib clang libgmp-dev libmpfr-dev libmpc-dev libgcrypt-dev gperf ragel texinfo autopoint re2c asciidoc python3-pip docbook2x unzip p7zip-full curl
-    pip3 install rst2pdf mako meson
+    sudo apt-get -qq update >/dev/null 2>&1
+    sudo apt-get -yqq install build-essential checkinstall bison flex gettext git mercurial subversion ninja-build gyp cmake yasm nasm automake pkg-config libtool libtool-bin gcc-multilib g++-multilib clang libgmp-dev libmpfr-dev libmpc-dev libgcrypt-dev gperf ragel texinfo autopoint re2c asciidoc python3-pip docbook2x unzip p7zip-full curl wget >/dev/null 2>&1
+    pip3 install rst2pdf mako meson >/dev/null 2>&1
 }
 
 package() {
