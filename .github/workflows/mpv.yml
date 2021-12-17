@@ -23,15 +23,22 @@ jobs:
     strategy:
       matrix:
         bit: [64]
+    outputs:
+      sha: ${{ steps.get_sha.outputs.sha }}
 
     steps:
       - uses: actions/checkout@v2
-      - uses: fregante/setup-git-user@v1
       - name: 'Get mpv latest commit sha'
         id: get_sha
-        uses: mego22/actions-git-sha@main
+        uses: actions/github-script@v5
         with:
-          repo: "https://github.com/mpv-player/mpv.git"
+          script: |
+            const commit = await github.rest.repos.getCommit({
+              owner: 'mpv-player',
+              repo: 'mpv',
+              ref: `master`
+            })
+            core.setOutput('sha', String(commit.data.sha))
       - name: Get current time
         run: |
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
@@ -60,6 +67,7 @@ jobs:
         with:
           name: logs
           path: logs.7z
+
       - name: Upload artifact
         id: upload
         uses: kittaakos/upload-artifact-as-is@master
@@ -80,20 +88,33 @@ jobs:
         with:
           path: artifacts
     
-      - name: 'Get mpv latest commit sha'
-        id: get_sha
-        uses: mego22/actions-git-sha@main
-        with:
-          repo: "https://github.com/mpv-player/mpv.git"
       - name: Get current time
         run: |
           echo "long_time=$(date "+%Y-%m-%d %H:%M")" >> $GITHUB_ENV
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
+      - name: Commit version & remove existing tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          git fetch --tags
+          git checkout version || git checkout -b version origin/version || ( git checkout --orphan version && git rm -rf . )
+          echo -e "${{ env.short_time }}" > version
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add version
+          git diff-index --quiet HEAD || ( git commit -m "${{ env.short_time }}" && git push origin version )
+          if [ $(git tag -l "${{ env.short_time }}") ] ;then
+            gh release delete "${{ env.short_time }}" || true
+            git push --delete origin "${{ env.short_time }}" || true
+            git tag -d "${{ env.short_time }}" || true
+          fi
+          git checkout main
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
           artifacts: "artifacts/*/*.7z"
-          commit: main
+          commit: version
           name: "MPV ${{ env.long_time }}"
           body: "**MPV git commit**: https://github.com/mpv-player/mpv/commit/${{ steps.get_sha.outputs.sha }}\n**Build Time**: ${{ env.long_time }}"
           tag: "mpv-${{ env.short_time }}"
@@ -105,4 +126,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
+          git checkout main
           bash prunetags.sh
