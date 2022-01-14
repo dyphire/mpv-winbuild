@@ -117,7 +117,7 @@ jobs:
           artifacts: "artifacts/*/*.7z"
           commit: version
           name: "MPV_OWN ${{ env.long_time }}"
-          body: "**MPV git commit**: https://github.com/mpv-player/mpv/commit/${{ needs.build_mpv.outputs.sha }}\n**Test**: Build with libass from [dyphire/libass_dev](https://github.com/dyphire/libass/tree/dev), it may fix some problems for scaled with PlayResX\n**Remember**: This is not perfect\n**Build Time**: ${{ env.long_time }}"
+          body: "**MPV git commit**: https://github.com/mpv-player/mpv/commit/${{ needs.build_mpv.outputs.sha }}\n**Test**: Build with libass from [dyphire/libass_dev](https://github.com/dyphire/libass/tree/dev), it may fix some problems for scaled with PlayResX, font: use iconv to handle non-unicode cmap microsoft fonts\n**Remember**: This is not perfect\n**Build Time**: ${{ env.long_time }}"
           tag: "mpv_own-${{ env.short_time }}"
           allowUpdates: true
           prerelease: false
