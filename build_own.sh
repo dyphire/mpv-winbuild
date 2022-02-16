@@ -3,6 +3,8 @@ set -x
 
 main() {
     dependency
+    git config --global user.name "github-actions[bot]"
+    git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
     local branch="patch"
     if [ -d mpv-winbuild-cmake ] ; then
         git  clone https://github.com/dyphire/mpv-winbuild-cmake.git temp
@@ -17,7 +19,8 @@ main() {
     git checkout $branch
     gitdir=$(pwd)
     buildroot=$(pwd)
-    isClean=$2
+    needClean=$2
+    userCommand=$3
 
     prepare
     if [ "$1" == "32" ]; then
@@ -32,19 +35,22 @@ main() {
 }
 
 dependency() {
-    sudo apt-get -qq update
-    sudo apt-get -qq install build-essential checkinstall bison flex gettext git mercurial subversion ninja-build gyp cmake yasm nasm automake pkg-config libtool libtool-bin gcc-multilib g++-multilib clang libgmp-dev libmpfr-dev libmpc-dev libgcrypt-dev gperf ragel texinfo autopoint re2c asciidoc python3-pip docbook2x unzip p7zip-full curl
-    pip3 install rst2pdf mako meson
+    sudo apt-get -qq update >/dev/null 2>&1
+    sudo apt-get -yqq install build-essential checkinstall bison flex gettext git mercurial subversion ninja-build gyp cmake yasm nasm automake pkg-config libtool libtool-bin gcc-multilib g++-multilib clang libgmp-dev libmpfr-dev libmpc-dev libgcrypt-dev gperf ragel texinfo autopoint re2c asciidoc python3-pip docbook2x unzip p7zip-full curl wget >/dev/null 2>&1
+    pip3 install rst2pdf mako meson >/dev/null 2>&1
 }
 
 package() {
     local bit=$1
     local arch=$2
 
-    if [ -n "$isClean" ]; then
+    if [ "$needClean" == "true" ]; then
         echo "Clean $bit-bit build files"
         sudo rm -rf $buildroot/build$bit
     fi
+    if [ -n "$userCommand" ]; then
+		eval "$userCommand"
+	fi
     build $bit $arch
     zip $bit $arch
     sudo rm -rf $buildroot/build$bit/mpv-$arch*
@@ -56,8 +62,8 @@ build() {
     local arch=$2
     if [ -d $buildroot/build$bit ]; then
         cmake -DTARGET_ARCH=$arch-w64-mingw32 -G Ninja -H$gitdir -B$buildroot/build$bit
-        ninja -C $buildroot/build$bit update
         ninja -C $buildroot/build$bit mpv-removebuild
+        ninja -C $buildroot/build$bit update
     else
         mkdir -p $buildroot/build$bit
         cmake -DTARGET_ARCH=$arch-w64-mingw32 -G Ninja -H$gitdir -B$buildroot/build$bit
@@ -115,4 +121,4 @@ prepare() {
     cd ../..
 }
 
-main $1 $2
+main "$1" "$2" "$3"
