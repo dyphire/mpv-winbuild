@@ -5,16 +5,22 @@ on:
 #    - cron: '0 8 * * */4'
   workflow_dispatch:
     inputs:
-      clean:
-        description: 'input anything if you want to clean build files'
+      needclean:
+        description: 'Delete cache and completely rebuild erverything'
+        required: false
+        default: false
+        type: boolean
+      release:
+        description: "Publish a release"
+        required: false
+        default: false
+        type: boolean
+      command:
+        description: 'input command you want to run before build'
         required: false
       cache_id:
         description: 'input cache_id if you want to renew cache'
         required: false
-      release:
-        description: "input 'false' if you don't want to release"
-        required: false
-        default: "true"
 
 jobs:
   build_mpv:
@@ -30,7 +36,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: 'Get mpv latest commit sha'
         id: get_sha
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             const commit = await github.rest.repos.getCommit({
@@ -57,11 +63,11 @@ jobs:
         id: build
         shell: bash
         run: |
-          sudo bash build.sh "${{ matrix.bit }}" "${{ github.event.inputs.clean }}"
+          docker run --rm -v $GITHUB_WORKSPACE:/root/workdir archlinux:base-devel /usr/bin/bash -c $'cd /root/workdir && chmod +x build.sh && bash build.sh \'${{ matrix.bit }}\' \'${{ github.event.inputs.needclean }}\' \'${{ github.event.inputs.command }}\''
       - name: Collect error logs
         if: ${{ always() && steps.build.outcome == 'failure' }}
         run: |
-          sudo 7z a logs.7z mpv-winbuild-cmake/build${{ matrix.bit }}/*-err.log -r
+          sudo 7z a logs.7z mpv-winbuild-cmake/build${{ matrix.bit }}/*.log -r
       - name: upload error logs
         uses: actions/upload-artifact@master
         if: ${{ always() && steps.build.outcome == 'failure' }}
@@ -69,11 +75,35 @@ jobs:
           name: logs
           path: logs.7z
 
-      - name: Upload artifact
-        id: upload
-        uses: kittaakos/upload-artifact-as-is@master
+      - name: "Get artifacts' name and path"
+        id: get_files
+        uses: actions/github-script@v6
         with:
-          path: mpv-winbuild-cmake/release/*.7z
+          script: |
+            const path = require('path');
+            const types = [ "mpv-dev", "mpv"];
+            const arch = ${{ matrix.bit }} == "64" ? "x86_64" : "i686";
+            for (let type of types) {
+              const globber = await glob.create(`mpv-winbuild-cmake/release/${type}-${arch}-*.7z`);
+              const files = await globber.glob();
+              if ( files.length > 0 ) {
+                const file = files[0];
+                core.exportVariable( `${type}-name`, path.basename(file) );
+                core.exportVariable( `${type}-path`, file );
+              }
+            }
+      - name: upload mpv-dev
+        uses: actions/upload-artifact@master
+        if: ${{ env.mpv-dev-name && env.mpv-dev-path }}
+        with:
+          name: ${{ env.mpv-dev-name }}
+          path: ${{ env.mpv-dev-path }}
+      - name: upload mpv
+        uses: actions/upload-artifact@master
+        if: ${{ env.mpv-name && env.mpv-path }}
+        with:
+          name: ${{ env.mpv-name }}
+          path: ${{ env.mpv-path }}
 
   publish_release:
     name: Publish release
