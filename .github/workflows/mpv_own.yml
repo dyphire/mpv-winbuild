@@ -15,6 +15,11 @@ on:
         required: false
         default: true
         type: boolean
+      prune:
+        description: "Prune old releases"
+        required: false
+        default: true
+        type: boolean
       command:
         description: 'input command you want to run before build'
         required: false
@@ -155,6 +160,7 @@ jobs:
       - name: Prune old releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: ${{ github.event.inputs.prune != 'false' }}
         shell: bash
         run: |
           git checkout main
