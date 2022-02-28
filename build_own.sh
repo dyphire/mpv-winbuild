@@ -49,8 +49,8 @@ package() {
         sudo rm -rf $buildroot/build$bit
     fi
     if [ -n "$userCommand" ]; then
-		eval "$userCommand"
-	fi
+        eval "$userCommand"
+    fi
     build $bit $arch
     zip $bit $arch
     sudo rm -rf $buildroot/build$bit/mpv-$arch*
@@ -83,7 +83,6 @@ zip() {
     local bit=$1
     local arch=$2
 
-    rm -rf $buildroot/build$bit/mpv-debug-*
     mv $buildroot/build$bit/mpv-* $gitdir/release
     cd ./release/mpv-packaging-master
     cp -r ./mpv-root/* ./$arch/d3dcompiler_43.dll ../mpv-$arch*
