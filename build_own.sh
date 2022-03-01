@@ -49,8 +49,8 @@ package() {
         sudo rm -rf $buildroot/build$bit
     fi
     if [ -n "$userCommand" ]; then
-		eval "$userCommand"
-	fi
+        eval "$userCommand"
+    fi
     build $bit $arch
     zip $bit $arch
     sudo rm -rf $buildroot/build$bit/mpv-$arch*
