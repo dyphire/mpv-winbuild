@@ -13,7 +13,6 @@ Use Github Action to build mpv-win with latest commit.
   - **MPV_OWN** Based on https://github.com/dyphire/mpv-winbuild-cmake. [![mpv-winbuild-cmake](https://flat.badgen.net/github/last-commit/dyphire/mpv-winbuild-cmake?scale=0.8&cache=1800)](https://github.com/dyphire/mpv-winbuild-cmake) 
      - **Test**: Build with libass from [dyphire/libass_dev](https://github.com/dyphire/libass/tree/dev)
        - Ass: it can fix some problems for scaled with PlayResX
-       - Font: Partial unicode name support for Windows
      - **Remember**: This is not perfect
 
 ## Auto-Builds
