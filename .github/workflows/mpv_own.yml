@@ -13,12 +13,12 @@ on:
       release:
         description: "Publish a release"
         required: false
-        default: false
+        default: true
         type: boolean
       prune:
         description: "Prune old releases"
         required: false
-        default: false
+        default: true
         type: boolean
       command:
         description: 'input command you want to run before build'
@@ -38,7 +38,7 @@ jobs:
       sha: ${{ steps.get_sha.outputs.sha }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: 'Get mpv latest commit sha'
         id: get_sha
         uses: actions/github-script@v6
@@ -56,7 +56,7 @@ jobs:
           echo "month=$(date "+%Y-%m")" >> $GITHUB_ENV
       
       - name: Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3.0.1
         with:
           path: mpv-winbuild-cmake/build${{ matrix.bit }}
           key: ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ env.short_time }}-${{ steps.get_sha.outputs.sha }}-${{ github.event.inputs.cache_id }}
@@ -118,9 +118,9 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: artifacts
     
@@ -145,7 +145,7 @@ jobs:
             git push --delete origin "${{ env.short_time }}" || true
             git tag -d "${{ env.short_time }}" || true
           fi
-          git checkout patch
+          git checkout master
       - name: Create release
         uses: ncipollo/release-action@v1
         with:
@@ -163,5 +163,5 @@ jobs:
         if: ${{ github.event.inputs.prune != 'false' }}
         shell: bash
         run: |
-          git checkout patch
+          git checkout master
           bash prunetags.sh

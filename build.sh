@@ -37,7 +37,7 @@ main() {
 dependency() {
     sudo echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
     sudo pacman -Syu --noconfirm
-    sudo pacman -S --noconfirm git gyp mercurial subversion ninja cmake meson ragel yasm nasm asciidoc enca gperf unzip p7zip gcc-multilib clang python-pip curl lib32-glib2 wget
+    sudo pacman -S --noconfirm --need git gyp mercurial subversion ninja cmake meson ragel yasm nasm asciidoc enca gperf unzip p7zip gcc-multilib clang python-pip curl lib32-glib2 wget
     pip3 install rst2pdf mako meson >/dev/null 2>&1
 }
 
@@ -49,9 +49,9 @@ package() {
         echo "Clean $bit-bit build files"
         sudo rm -rf $buildroot/build$bit
     fi
-	if [ -n "$userCommand" ]; then
-		eval "$userCommand"
-	fi
+    if [ -n "$userCommand" ]; then
+        eval "$userCommand"
+    fi
     build $bit $arch
     zip $bit $arch
     sudo rm -rf $buildroot/build$bit/mpv-$arch*
