@@ -1,4 +1,4 @@
-name: Clean workflows and releases
+name: Clean workflows
 on:
   schedule:
     - cron: '0 0 1 * *'

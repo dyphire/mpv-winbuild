@@ -2,25 +2,10 @@
 set -x
 
 main() {
-    dependency
-    git config --global user.name "github-actions[bot]"
-    git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-    local branch="master"
-    if [ -d mpv-winbuild-cmake ] ; then
-        git  clone https://github.com/shinchiro/mpv-winbuild-cmake.git temp
-        shopt -s dotglob
-        mv -f temp/* mpv-winbuild-cmake/
-        shopt -u dotglob
-        sudo rm -rf temp
-    else
-        git clone https://github.com/shinchiro/mpv-winbuild-cmake.git
-    fi
-    cd mpv-winbuild-cmake
-    git checkout $branch
     gitdir=$(pwd)
     buildroot=$(pwd)
-    needClean=$2
-    userCommand=$3
+    srcdir=$(pwd)/src_packages
+    userCommand=$2
 
     prepare
     if [ "$1" == "32" ]; then
@@ -34,21 +19,10 @@ main() {
     rm -rf ./release/mpv-packaging-master
 }
 
-dependency() {
-    sudo echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
-    sudo pacman -Syu --noconfirm
-    sudo pacman -S --noconfirm --need git gyp mercurial subversion ninja cmake meson ragel yasm nasm asciidoc enca gperf unzip p7zip gcc-multilib clang python-pip curl lib32-glib2 wget
-    pip3 install rst2pdf mako meson >/dev/null 2>&1
-}
-
 package() {
     local bit=$1
     local arch=$2
 
-    if [ "$needClean" == "true" ]; then
-        echo "Clean $bit-bit build files"
-        sudo rm -rf $buildroot/build$bit
-    fi
     if [ -n "$userCommand" ]; then
         eval "$userCommand"
     fi
@@ -61,16 +35,15 @@ package() {
 build() {
     local bit=$1
     local arch=$2
-    if [ -d $buildroot/build$bit ]; then
-        cmake -DTARGET_ARCH=$arch-w64-mingw32 -G Ninja -H$gitdir -B$buildroot/build$bit
-        ninja -C $buildroot/build$bit mpv-removebuild
+    
+    cmake -DTARGET_ARCH=$arch-w64-mingw32 -DALWAYS_REMOVE_BUILDFILES=OFF -DSINGLE_SOURCE_LOCATION=$srcdir -G Ninja -H$gitdir -B$buildroot/build$bit
+    ninja -C $buildroot/build$bit download || true
+    if [[ "$(ls -A $buildroot/build$bit/install/bin)" ]]; then
         ninja -C $buildroot/build$bit update
     else
-        mkdir -p $buildroot/build$bit
-        cmake -DTARGET_ARCH=$arch-w64-mingw32 -G Ninja -H$gitdir -B$buildroot/build$bit
         ninja -C $buildroot/build$bit gcc
     fi
-    ninja -C $buildroot/build$bit mpv || ninja -C $buildroot/build$bit mpv || ninja -C $buildroot/build$bit mpv
+    ninja -C $buildroot/build$bit mpv && ninja -C $buildroot/build$bit mpv-removebuild
 
     if [ -d $buildroot/build$bit/mpv-$arch* ] ; then
         echo "Successfully compiled $bit-bit. Continue"
@@ -102,7 +75,7 @@ download_mpv_package() {
     local package_url="https://codeload.github.com/dyphire/mpv-packaging/zip/master"
     if [ -e mpv-packaging.zip ]; then
         echo "Package exists. Check if it is newer.."
-        remote_commit=$(git ls-remote https://github.com/dyphire/mpv-packaging.git master | awk '{print $1;}')
+        remote_commit=$(git ls-remote https://github.com/shinchiro/mpv-packaging.git master | awk '{print $1;}')
         local_commit=$(unzip -z mpv-packaging.zip | tail +2)
         if [ "$remote_commit" != "$local_commit" ]; then
             wget -O mpv-packaging.zip $package_url
@@ -122,4 +95,4 @@ prepare() {
     cd ../..
 }
 
-main "$1" "$2" "$3"
+main "$1" "$2"

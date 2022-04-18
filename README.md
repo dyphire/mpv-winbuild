@@ -29,7 +29,7 @@ This repo only provides 64-bit version. If you need a 32-bit version, you can fo
 
 ### Release Retention Policy
 - The last build of each month is kept for one years.
-- The last 14 weekly builds are kept.
+- The last 30 weekly builds are kept.
 
 ## Information about packages
 
@@ -40,7 +40,8 @@ Same as [shinchiro](https://github.com/shinchiro/mpv-winbuild-cmake/blob/master/
     -   FFmpeg [![FFmpeg](https://flat.badgen.net/github/last-commit/FFmpeg/FFmpeg?scale=0.8&cache=1800)](https://github.com/FFmpeg/FFmpeg)
     -   libass [![libass](https://flat.badgen.net/github/last-commit/libass/libass?scale=0.8&cache=1800)](https://github.com/libass/libass)
     -   libplacebo (with [libepoxy](https://github.com/anholt/libepoxy.git)) [![libplacebo](https://flat.badgen.net/github/last-commit/haasn/libplacebo?scale=0.8&cache=1800)](https://github.com/haasn/libplacebo)
-    -   vulkan [![Vulkan-Loader](https://flat.badgen.net/github/last-commit/KhronosGroup/Vulkan-Loader?scale=0.8&cache=1800)](https://github.com/KhronosGroup/Vulkan-Loader) [![Vulkan-Headers](https://flat.badgen.net/github/last-commit/KhronosGroup/Vulkan-Headers/main?scale=0.8&cache=1800)](https://github.com/KhronosGroup/Vulkan-Headers)
+    -   vulkan-header [![Vulkan-Headers](https://flat.badgen.net/github/last-commit/KhronosGroup/Vulkan-Headers/main?scale=0.8&cache=1800)](https://github.com/KhronosGroup/Vulkan-Headers)
+    -   vulkan [![Vulkan-Loader](https://flat.badgen.net/github/last-commit/KhronosGroup/Vulkan-Loader?scale=0.8&cache=1800)](https://github.com/KhronosGroup/Vulkan-Loader) 
     -   ANGLE [![ANGLE](https://flat.badgen.net/gitlab/last-commit/shinchiro/angle?scale=0.8&cache=1800)](https://gitlab.com/shinchiro/angle)
     -   xz [![xz](https://flat.badgen.net/gitlab/last-commit/shinchiro/xz?scale=0.8&cache=1800)](https://gitlab.com/shinchiro/xz)
 	-   x264 [![x264](https://flat.badgen.net/https/gitlab-latest-commit-rphv1x3zj2pi.runkit.sh/code.videolan.org/videolan/x264?scale=0.8&cache=1800)](https://code.videolan.org/videolan/x264)
@@ -58,6 +59,7 @@ Same as [shinchiro](https://github.com/shinchiro/mpv-winbuild-cmake/blob/master/
     -  libdvdread [![libdvdread](https://flat.badgen.net/https/gitlab-latest-commit-rphv1x3zj2pi.runkit.sh/code.videolan.org/videolan/libdvdread?scale=0.8&cache=1800)](https://code.videolan.org/videolan/libdvdread)
     -   libdvdnav [![libdvdnav](https://flat.badgen.net/https/gitlab-latest-commit-rphv1x3zj2pi.runkit.sh/code.videolan.org/videolan/libdvdnav?scale=0.8&cache=1800)](https://code.videolan.org/videolan/libdvdnav)
     -   libdvdcss [![libdvdcss](https://flat.badgen.net/https/gitlab-latest-commit-rphv1x3zj2pi.runkit.sh/code.videolan.org/videolan/libdvdcss?scale=0.8&cache=1800)](https://code.videolan.org/videolan/libdvdcss)
+    -   libudfread [![libudfread](https://flat.badgen.net/https/gitlab-latest-commit-rphv1x3zj2pi.runkit.sh/code.videolan.org/videolan/libudfread?scale=0.8&cache=1800)](https://code.videolan.org/videolan/libudfread)
     -   libbluray [![libbluray](https://flat.badgen.net/https/gitlab-latest-commit-rphv1x3zj2pi.runkit.sh/code.videolan.org/videolan/libbluray?scale=0.8&cache=1800)](https://code.videolan.org/videolan/libbluray)
     -   libmysofa [![libmysofa](https://flat.badgen.net/github/last-commit/hoene/libmysofa?scale=0.8&cache=1800)](https://github.com/hoene/libmysofa)
     -   lcms2 [![lcms2](https://flat.badgen.net/github/last-commit/mm2/Little-CMS?scale=0.8&cache=1800)](https://github.com/mm2/Little-CMS)
@@ -89,18 +91,18 @@ Same as [shinchiro](https://github.com/shinchiro/mpv-winbuild-cmake/blob/master/
     -   libsrt [![libsrt](https://flat.badgen.net/github/last-commit/Haivision/srt?scale=0.8&cache=1800)](https://github.com/Haivision/srt)
 
 -   Zip
-    -   [expat](https://github.com/libexpat/libexpat) (2.4.7)
+    -   [expat](https://github.com/libexpat/libexpat) (2.4.8)
     -   [bzip](https://sourceware.org/pub/bzip2/) (1.0.8)
-    -   [zlib](https://sourceforge.net/projects/libpng/files/zlib/) (1.2.11)
+    -   [zlib](https://sourceforge.net/projects/libpng/files/zlib/) (1.2.12)
     -   [xvidcore](https://labs.xvid.com/source/) (1.3.7)
     -   [vorbis](https://xiph.org/downloads/) (1.3.7)
     -   [speex](https://ftp.osuosl.org/pub/xiph/releases/speex/) (1.2.0)
     -   [ogg](https://ftp.osuosl.org/pub/xiph/releases/ogg/) (1.3.5)
     -   [lzo](https://fossies.org/linux/misc/) (2.10)
     -   [libmodplug](https://sourceforge.net/projects/modplug-xmms/files/libmodplug/) (0.8.9.0)
-    -   [libopenmpt](https://lib.openmpt.org/libopenmpt/download/) (0.5.10)
+    -   [libopenmpt](https://lib.openmpt.org/libopenmpt/download/) (0.6.2)
     -   [libiconv](https://ftp.gnu.org/pub/gnu/libiconv/) (1.16)
     -   [gmp](https://gmplib.org/download/gmp/) (6.2.1)
-    -   [vapoursynth](https://github.com/vapoursynth/vapoursynth) (R57)
-    -   [libsdl2](https://www.libsdl.org/release/) (2.0.16)
+    -   [vapoursynth](https://github.com/vapoursynth/vapoursynth) (R58)
+    -   [libsdl2](https://www.libsdl.org/release/) (2.0.20)
     -   [libressl](https://cdn.openbsd.org/pub/OpenBSD/LibreSSL/) (3.1.5)

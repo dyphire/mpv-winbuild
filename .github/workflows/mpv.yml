@@ -1,24 +1,36 @@
 name: MPV
 
 on: 
-#  schedule:
-#    - cron: '0 8 * * */4'
+  schedule:
+    - cron: '0 8 * * */4'
   workflow_dispatch:
     inputs:
+      winbuild_repo:
+        required: true
+        default: 'dyphire/mpv-winbuild-cmake'
+      winbuild_ref:
+        required: true
+        default: 'patch'
+      mpv_owner:
+        required: true
+        default: 'dyphire'
+      mpv_ref:
+        required: true
+        default: 'patch'
       needclean:
         description: 'Delete cache and completely rebuild erverything'
         required: false
-        default: false
+        default: 'false'
         type: boolean
       release:
         description: "Publish a release"
         required: false
-        default: false
+        default: 'true'
         type: boolean
       prune:
         description: "Prune old releases"
         required: false
-        default: true
+        default: 'true'
         type: boolean
       command:
         description: 'input command you want to run before build'
@@ -27,53 +39,146 @@ on:
         description: 'input cache_id if you want to renew cache'
         required: false
 
-jobs:
-  build_mpv:
-    name: Build MPV
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        bit: [64]
-    outputs:
-      sha: ${{ steps.get_sha.outputs.sha }}
+# Workflow level env does not work properly in all fields.
+# https://github.com/actions/runner/issues/480
+env:
+  winbuildrepo: 'dyphire/mpv-winbuild-cmake'
+  winbuildref: 'patch'
+  mpvowner: 'dyphire'
+  mpvref: 'patch'
+  release: 'true'
+  prune: 'true'
 
+jobs:
+  # https://github.com/actions/runner/issues/480#issuecomment-1055373623
+  params:
+    runs-on: ubuntu-latest
+    outputs:
+      params: ${{ steps.env-vars.outputs.params }}
     steps:
-      - uses: actions/checkout@v3
+      - name: Install jq
+        run: pip install jq
+      - name: Generate cache_id
+        run: |
+          if [ "${{ github.event.inputs.cache_id }}" ] ; then
+            echo "cache_id=${{ github.event.inputs.cache_id }}" >> $GITHUB_ENV
+          else
+            echo "cache_id=$(echo $RANDOM | md5sum | head -c 20)" >> $GITHUB_ENV
+          fi
+      - name: Set winbuild_repo
+        run: |
+          if [ "${{ github.event.inputs.winbuild_repo }}" ] ; then
+            echo "winbuild_repo=${{ github.event.inputs.winbuild_repo }}" >> $GITHUB_ENV
+          else
+            echo "winbuild_repo=${{ env.winbuildrepo }}" >> $GITHUB_ENV
+          fi
+      - name: Set winbuild_ref
+        run: |
+          if [ "${{ github.event.inputs.winbuild_ref }}" ] ; then
+            echo "winbuild_ref=${{ github.event.inputs.winbuild_ref }}" >> $GITHUB_ENV
+          else
+            echo "winbuild_ref=${{ env.winbuildref }}" >> $GITHUB_ENV
+          fi
+      - name: Set mpv_owner
+        run: |
+          if [ "${{ github.event.inputs.mpv_owner }}" ] ; then
+            echo "mpv_owner=${{ github.event.inputs.mpv_owner }}" >> $GITHUB_ENV
+          else
+            echo "mpv_owner=${{ env.mpvowner }}" >> $GITHUB_ENV
+          fi
+      - name: Set mpv_ref
+        run: |
+          if [ "${{ github.event.inputs.mpv_ref }}" ] ; then
+            echo "mpv_ref=${{ github.event.inputs.mpv_ref }}" >> $GITHUB_ENV
+          else
+            echo "mpv_ref=${{ env.mpvref }}" >> $GITHUB_ENV
+          fi
       - name: 'Get mpv latest commit sha'
         id: get_sha
         uses: actions/github-script@v6
         with:
           script: |
             const commit = await github.rest.repos.getCommit({
-              owner: 'mpv-player',
+              owner: '${{ env.mpv_owner }}',
               repo: 'mpv',
-              ref: `master`
+              ref: '${{ env.mpv_ref }}'
             })
-            core.setOutput('sha', String(commit.data.sha))
-      - name: Get current time
+            core.exportVariable('sha', String(commit.data.sha))
+      - id: env-vars
+        name: Output environment variables
+        run: echo "::set-output name=params::$(echo $(jq -n 'env'))"
+
+  build_mpv:
+    name: Build MPV
+    needs: params
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+    strategy:
+      matrix:
+        bit: [64]
+
+    steps:
+      - name: Install Dependencies
         run: |
+          sudo echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
+          sudo pacman -Syu --noconfirm
+          sudo pacman -S --noconfirm --needed git gyp mercurial subversion ninja cmake meson ragel yasm nasm asciidoc enca gperf unzip p7zip gcc-multilib clang python-pip curl lib32-glib2 wget
+          pip3 install rst2pdf mako meson >/dev/null 2>&1
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --global --add safe.directory $(pwd)
+          git config --global --add safe.directory $(pwd)/mpv-winbuild-cmake
+      - uses: actions/checkout@v3
+      - name: Checkout toolchain
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ fromJson(needs.params.outputs.params).winbuild_repo }}
+          ref: ${{ fromJson(needs.params.outputs.params).winbuild_ref }}
+          path: mpv-winbuild-cmake
+      - name: Get Params
+        run: |
+          echo "sha=${{ fromJson(needs.params.outputs.params).sha }}" >> $GITHUB_ENV
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
-          echo "month=$(date "+%Y-%m")" >> $GITHUB_ENV
-      
+          echo "cache_id=${{ fromJson(needs.params.outputs.params).cache_id }}" >> $GITHUB_ENV
+
+      - name: Cache Sources
+        uses: actions/cache@v3.0.1
+        with:
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/src_packages
+          key: ${{ runner.os }}-source-${{ env.short_time }}-${{ env.sha }}-${{ env.cache_id }}
+          restore-keys: |
+            ${{ runner.os }}-source-${{ env.short_time }}-${{ env.sha }}
+            ${{ runner.os }}-source-${{ env.short_time }}
+            ${{ runner.os }}-source
       - name: Cache
         uses: actions/cache@v3.0.1
         with:
-          path: mpv-winbuild-cmake/build${{ matrix.bit }}
-          key: ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ env.short_time }}-${{ steps.get_sha.outputs.sha }}-${{ github.event.inputs.cache_id }}
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/build${{ matrix.bit }}
+          key: ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ env.short_time }}-${{ env.sha }}-${{ env.cache_id }}
           restore-keys: |
-            ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ env.short_time }}-${{ steps.get_sha.outputs.sha }}
+            ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ env.short_time }}-${{ env.sha }}
             ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ env.short_time }}
-            ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ env.month }}
+            ${{ runner.os }}-mpv-build${{ matrix.bit }}
+      - name: Clean Cache
+        if: ${{ github.event.inputs.needclean == 'true' }}
+        shell: bash
+        run: |
+          cd mpv-winbuild-cmake
+          rm -rf build${{ matrix.bit }} || true
+          rm -rf src_packages || true
       - name: Build
         id: build
         shell: bash
         run: |
-          docker run --rm -v $GITHUB_WORKSPACE:/root/workdir archlinux:base-devel /usr/bin/bash -c $'cd /root/workdir && chmod +x build.sh && bash build.sh \'${{ matrix.bit }}\' \'${{ github.event.inputs.needclean }}\' \'${{ github.event.inputs.command }}\''
+          chmod +x build.sh
+          cd mpv-winbuild-cmake
+          bash ../build.sh '${{ matrix.bit }}' '${{ github.event.inputs.command }}'
       - name: Collect error logs
         if: ${{ always() && steps.build.outcome == 'failure' }}
         run: |
-          sudo 7z a logs.7z mpv-winbuild-cmake/build${{ matrix.bit }}/*.log -r
-      - name: upload error logs
+          sudo 7z a logs.7z mpv-winbuild-cmake/build${{ matrix.bit }}/*-*.log -r
+      - name: Upload error logs
         uses: actions/upload-artifact@master
         if: ${{ always() && steps.build.outcome == 'failure' }}
         with:
@@ -97,14 +202,15 @@ jobs:
                 core.exportVariable( `${type}-path`, file );
               }
             }
-      - name: upload mpv-dev
-        uses: actions/upload-artifact@master
+
+      - name: Upload mpv-dev
+        uses: actions/upload-artifact@v3
         if: ${{ env.mpv-dev-name && env.mpv-dev-path }}
         with:
           name: ${{ env.mpv-dev-name }}
           path: ${{ env.mpv-dev-path }}
-      - name: upload mpv
-        uses: actions/upload-artifact@master
+      - name: Upload mpv
+        uses: actions/upload-artifact@v3
         if: ${{ env.mpv-name && env.mpv-path }}
         with:
           name: ${{ env.mpv-name }}
@@ -112,8 +218,8 @@ jobs:
 
   publish_release:
     name: Publish release
-    needs: build_mpv
-    if: ${{ github.event.inputs.release != 'false' }}
+    needs: [build_mpv,params]
+    if: ${{ (github.event.inputs.release != null && github.event.inputs.release == 'true') || (github.event.inputs.release == null && fromJson(needs.params.outputs.params).release == 'true') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -128,6 +234,7 @@ jobs:
         run: |
           echo "long_time=$(date "+%Y-%m-%d %H:%M")" >> $GITHUB_ENV
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
+
       - name: Commit version & remove existing tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -146,13 +253,38 @@ jobs:
             git tag -d "${{ env.short_time }}" || true
           fi
           git checkout master
-      - name: Create release
+      - name: Create release for dyphire/mpv & dyphire/libass
         uses: ncipollo/release-action@v1
+        if: ${{ ( fromJson(needs.params.outputs.params).winbuild_repo == 'dyphire/mpv-winbuild-cmake' && fromJson(needs.params.outputs.params).winbuild_ref == 'patch' ) }}
+        with:
+          artifacts: "artifacts/*/*.7z"
+          commit: version
+          name: "MPV_OWN ${{ env.long_time }}"
+          body: "**MPV git commit**: https://github.com/dyphire/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n- merged: https://github.com/mpv-player/mpv/pull/8865, https://github.com/mpv-player/mpv/pull/9360, https://github.com/mpv-player/mpv/pull/9621, https://github.com/mpv-player/mpv/pull/9664, https://github.com/mpv-player/mpv/pull/9856\n\n**Test**: Build with libass from [dyphire/libass_dev](https://github.com/dyphire/libass/tree/dev)\n- Ass: it can fix some problems for scaled with PlayResX\n\n**Remember**: This is not perfect\n**Build Time**: ${{ env.long_time }}"
+          tag: "mpv_own-${{ env.short_time }}"
+          allowUpdates: true
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create release for mpv-player/mpv & dyphire/libass
+        uses: ncipollo/release-action@v1
+        if: ${{ ( fromJson(needs.params.outputs.params).winbuild_repo == 'dyphire/mpv-winbuild-cmake' && fromJson(needs.params.outputs.params).winbuild_ref == 'master' ) }}
+        with:
+          artifacts: "artifacts/*/*.7z"
+          commit: version
+          name: "MPV_OWN ${{ env.long_time }}"
+          body: "**MPV git commit**: https://github.com/mpv-player/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n**Test**: Build with libass from [dyphire/libass_dev](https://github.com/dyphire/libass/tree/dev)\n- Ass: it can fix some problems for scaled with PlayResX\n\n**Remember**: This is not perfect\n**Build Time**: ${{ env.long_time }}"
+          tag: "mpv_own-${{ env.short_time }}"
+          allowUpdates: true
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create release for mpv-player/mpv
+        uses: ncipollo/release-action@v1
+        if: ${{ ( fromJson(needs.params.outputs.params).winbuild_repo == 'shinchiro/mpv-winbuild-cmake') }}
         with:
           artifacts: "artifacts/*/*.7z"
           commit: version
           name: "MPV ${{ env.long_time }}"
-          body: "**MPV git commit**: https://github.com/mpv-player/mpv/commit/${{ needs.build_mpv.outputs.sha }}\n**Build Time**: ${{ env.long_time }}"
+          body: "**MPV git commit**: https://github.com/mpv-player/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n**Build Time**: ${{ env.long_time }}"
           tag: "mpv-${{ env.short_time }}"
           allowUpdates: true
           prerelease: false
@@ -160,7 +292,7 @@ jobs:
       - name: Prune old releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ github.event.inputs.prune != 'false' }}
+        if: ${{ (github.event.inputs.prune != null && github.event.inputs.prune == 'true') || (github.event.inputs.release == null && fromJson(needs.params.outputs.params).prune == 'true') }}
         shell: bash
         run: |
           git checkout master
