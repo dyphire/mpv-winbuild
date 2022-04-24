@@ -1,6 +1,6 @@
 # mpv-build
 
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/dyphire/mpv-winbuild/MPV_OWN)](https://github.com/dyphire/mpv-winbuild/actions)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/dyphire/mpv-winbuild/MPV)](https://github.com/dyphire/mpv-winbuild/actions)
 [![releases](https://img.shields.io/github/v/release/dyphire/mpv-winbuild)](https://github.com/dyphire/mpv-winbuild/releases)
 [![downloads](https://img.shields.io/github/downloads/dyphire/mpv-winbuild/total)](https://github.com/dyphire/mpv-winbuild/releases)
 
@@ -11,7 +11,7 @@ Use Github Action to build mpv-win with latest commit.
   - **MPV** Based on https://github.com/shinchiro/mpv-winbuild-cmake. [![mpv-winbuild-cmake](https://flat.badgen.net/github/last-commit/shinchiro/mpv-winbuild-cmake?scale=0.8&cache=1800)](https://github.com/shinchiro/mpv-winbuild-cmake)
 
   - **MPV_OWN** Based on https://github.com/dyphire/mpv-winbuild-cmake. [![mpv-winbuild-cmake](https://flat.badgen.net/github/last-commit/dyphire/mpv-winbuild-cmake?scale=0.8&cache=1800)](https://github.com/dyphire/mpv-winbuild-cmake) 
-     - **Test**: mpv from [dyphire/mpv](https://github.com/dyphire/mpv/tree/tests)
+     - **Test**: mpv from [dyphire/mpv](https://github.com/dyphire/mpv/tree/patch)
        - merged: mpv-player/mpv#8865, mpv-player/mpv#9360, mpv-player/mpv#9621, mpv-player/mpv#9664, mpv-player/mpv#9856
      - **Test**: Build with libass from [dyphire/libass_dev](https://github.com/dyphire/libass/tree/dev)
        - Ass: it can fix some problems for scaled with PlayResX

@@ -123,7 +123,7 @@ jobs:
         run: |
           sudo echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
           sudo pacman -Syu --noconfirm
-          sudo pacman -S --noconfirm --needed git gyp mercurial subversion ninja cmake meson ragel yasm nasm asciidoc enca gperf unzip p7zip gcc-multilib clang python-pip curl lib32-glib2 wget
+          sudo pacman -S --noconfirm --needed git gyp mercurial subversion ninja cmake ragel yasm nasm asciidoc enca gperf unzip p7zip gcc-multilib clang python-pip curl lib32-glib2 wget
           pip3 install rst2pdf mako meson >/dev/null 2>&1
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -198,23 +198,36 @@ jobs:
               const files = await globber.glob();
               if ( files.length > 0 ) {
                 const file = files[0];
-                core.exportVariable( `${type}-name`, path.basename(file) );
-                core.exportVariable( `${type}-path`, file );
+                core.exportVariable( `${type}_name`, path.basename(file) );
+                core.exportVariable( `${type}_path`, file );
               }
             }
 
+            let { stdout: ffmpeg_hash } = await exec.getExecOutput("git -C mpv-winbuild-cmake/src_packages/ffmpeg rev-parse --short HEAD");
+            ffmpeg_hash = ffmpeg_hash.trim();
+            const ffmpeg_name = `ffmpeg-${arch}-git-${ffmpeg_hash}`;
+            core.exportVariable( 'ffmpeg_name', ffmpeg_name );
+            await exec.exec(`7z a -m0=lzma2 -mx=9 -ms=on mpv-winbuild-cmake/release/${ffmpeg_name}.7z mpv-winbuild-cmake/build${{ matrix.bit }}/install/mingw/bin/ffmpeg.exe`)
+
       - name: Upload mpv-dev
         uses: actions/upload-artifact@v3
-        if: ${{ env.mpv-dev-name && env.mpv-dev-path }}
+        if: ${{ env.mpv-dev_name && env.mpv-dev_path }}
         with:
-          name: ${{ env.mpv-dev-name }}
-          path: ${{ env.mpv-dev-path }}
+          name: ${{ env.mpv-dev_name }}
+          path: ${{ env.mpv-dev_path }}
       - name: Upload mpv
         uses: actions/upload-artifact@v3
-        if: ${{ env.mpv-name && env.mpv-path }}
+        if: ${{ env.mpv_name && env.mpv_path }}
         with:
-          name: ${{ env.mpv-name }}
-          path: ${{ env.mpv-path }}
+          name: ${{ env.mpv_name }}
+          path: ${{ env.mpv_path }}
+          
+      - name: Upload ffmpeg
+        uses: actions/upload-artifact@v3
+        if: ${{ env.ffmpeg_name }}
+        with:
+          name: ${{ env.ffmpeg_name }}
+          path: mpv-winbuild-cmake/release/${{ env.ffmpeg_name }}.7z
 
   publish_release:
     name: Publish release
