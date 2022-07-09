@@ -5,7 +5,7 @@ main() {
     dependency
     git config --global user.name "github-actions[bot]"
     git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-    local branch="autoconf_2_69"
+    local branch="patch"
     if [ -d mpv-winbuild-cmake ] ; then
         git  clone https://github.com/dyphire/mpv-winbuild-cmake.git temp
         shopt -s dotglob
