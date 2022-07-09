@@ -7,7 +7,7 @@ pip3 install rst2pdf mako meson >/dev/null 2>&1
 
 git clone https://github.com/shinchiro/mpv-winbuild-cmake.git
 cd mpv-winbuild-cmake
-git checkout gcc10
+git checkout patch
 mkdir build64 && cd build64
 cmake -DTARGET_ARCH=x86_64-w64-mingw32 -G Ninja ..
 ninja gcc
