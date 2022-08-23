@@ -17,6 +17,17 @@ on:
       mpv_ref:
         required: true
         default: 'patch'
+      build_target:
+        description: "Build target"
+        required: false
+        default: "all-64bit"
+        type: choice
+        options:
+        - 32bit
+        - 64bit
+        - 64bit-v3
+        - all-64bit
+        - all
       needclean:
         description: 'Delete cache and completely rebuild erverything'
         required: false
@@ -55,9 +66,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       params: ${{ steps.env-vars.outputs.params }}
+      matrix: ${{ steps.script.outputs.matrix }}
     steps:
-      - name: Install jq
-        run: pip install jq
       - name: Generate cache_id
         run: |
           if [ "${{ github.event.inputs.cache_id }}" ] ; then
@@ -93,8 +103,7 @@ jobs:
           else
             echo "mpv_ref=${{ env.mpvref }}" >> $GITHUB_ENV
           fi
-      - name: 'Get mpv latest commit sha'
-        id: get_sha
+      - id: script
         uses: actions/github-script@v6
         with:
           script: |
@@ -104,6 +113,30 @@ jobs:
               ref: '${{ env.mpv_ref }}'
             })
             core.exportVariable('sha', String(commit.data.sha))
+            
+            let matrix = {};
+            let build_target = "${{ github.event.inputs.build_target }}"
+            switch ( build_target ) {
+              case "32bit":
+                matrix.bit = ["32"];
+                break;
+              case "64bit":
+                matrix.bit = ["64"];
+                break;
+              case "64bit-v3":
+                matrix.bit = ["64-v3"];
+                break;
+              case "all-64bit":
+                matrix.bit = ["64","64-v3"];
+                break;
+              case "all":
+                matrix.bit = ["32","64","64-v3"];
+                break;
+              default:
+                matrix.bit = ["64","64-v3"];
+                break;
+            }
+            core.setOutput("matrix",JSON.stringify(matrix));
       - id: env-vars
         name: Output environment variables
         run: echo "::set-output name=params::$(echo $(jq -n 'env'))"
@@ -114,9 +147,9 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: archlinux/archlinux:base-devel
+    continue-on-error: true
     strategy:
-      matrix:
-        bit: [64]
+      matrix: ${{ fromJson(needs.params.outputs.matrix) }}
 
     steps:
       - name: Install Dependencies
@@ -184,6 +217,10 @@ jobs:
               arch="i686"
           elif [ $bit == "64" ]; then
               arch="x86_64"
+          elif [ $bit == "64-v3" ]; then
+              arch="x86_64"
+              gcc_arch=-DGCC_ARCH=x86-64-v3
+              x86_64_level=-v3
           fi
           set -x
           ${{ github.event.inputs.command }}
@@ -212,7 +249,18 @@ jobs:
           script: |
             const path = require('path');
             const types = [ "mpv-dev", "mpv"];
-            const arch = ${{ matrix.bit }} == "64" ? "x86_64" : "i686";
+            let arch="";
+            switch ( "${{ matrix.bit }}" ) {
+              case "32":
+                arch = "i686";
+                break;
+              case "64":
+                arch = "x86_64";
+                break;
+              case "64-v3":
+                arch = "x86_64-v3";
+                break;
+            }
             for (let type of types) {
               const globber = await glob.create(`mpv-winbuild-cmake/release/${type}-${arch}-*.7z`);
               const files = await globber.glob();
