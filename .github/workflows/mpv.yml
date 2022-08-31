@@ -157,7 +157,7 @@ jobs:
           sudo echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
           sudo pacman -Syu --noconfirm
           sudo pacman -S --noconfirm --needed git gyp mercurial subversion ninja cmake ragel yasm nasm asciidoc enca gperf unzip p7zip gcc-multilib clang python-pip curl lib32-glib2 wget
-          pip3 install rst2pdf mako https://github.com/mesonbuild/meson/archive/refs/heads/master.zip
+          pip3 install -U setuptools rst2pdf mako https://github.com/mesonbuild/meson/archive/refs/heads/master.zip
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global pull.rebase true
@@ -416,6 +416,7 @@ jobs:
           body: "**MPV git commit**: https://github.com/dyphire/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n- Merged: https://github.com/mpv-player/mpv/pull/8865, https://github.com/mpv-player/mpv/pull/9360, https://github.com/mpv-player/mpv/pull/9621, https://github.com/mpv-player/mpv/pull/9664, https://github.com/mpv-player/mpv/pull/9856\n- Test: add `--auto-window-resize`,`--sub-fonts-dir`,`--osd-fonts-dir`,`--subs-fallback`,`--subs-fallback-forced`,`--osd-wrap-unicode` and `--sub-ass-feature-*` options\n\n**Test**: Build with libass from [dyphire/libass_dev](https://github.com/dyphire/libass/tree/dev)\n- Ass: it can fix some problems for scaled with PlayResX\n\n**Remember**: This is not perfect\n**Build Details**: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}\n**Build Time**: ${{ env.long_time }}"
           tag: "mpv_own-${{ env.short_time }}"
           allowUpdates: true
+          artifactErrorsFailBuild: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Create release for mpv-player/mpv & dyphire/libass
@@ -428,6 +429,7 @@ jobs:
           body: "**MPV git commit**: https://github.com/mpv-player/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n**Test**: Build with libass from [dyphire/libass_dev](https://github.com/dyphire/libass/tree/dev)\n- Ass: it can fix some problems for scaled with PlayResX\n\n**Remember**: This is not perfect\n**Build Details**: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}\n**Build Time**: ${{ env.long_time }}"
           tag: "mpv_own-${{ env.short_time }}"
           allowUpdates: true
+          artifactErrorsFailBuild: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Create release for mpv-player/mpv
@@ -440,6 +442,7 @@ jobs:
           body: "**MPV git commit**: https://github.com/mpv-player/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n**Build Details**: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}\n**Build Time**: ${{ env.long_time }}"
           tag: "mpv-${{ env.short_time }}"
           allowUpdates: true
+          artifactErrorsFailBuild: true
           prerelease: false
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Prune old releases
