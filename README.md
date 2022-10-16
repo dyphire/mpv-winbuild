@@ -11,6 +11,8 @@ Use Github Action to build mpv-win with latest commit.
   - **MPV** Based on https://github.com/shinchiro/mpv-winbuild-cmake. [![mpv-winbuild-cmake](https://flat.badgen.net/github/last-commit/shinchiro/mpv-winbuild-cmake?scale=0.8&cache=1800)](https://github.com/shinchiro/mpv-winbuild-cmake)
 
   - **MPV_OWN** Based on https://github.com/dyphire/mpv-winbuild-cmake. [![mpv-winbuild-cmake](https://flat.badgen.net/github/last-commit/dyphire/mpv-winbuild-cmake?scale=0.8&cache=1800)](https://github.com/dyphire/mpv-winbuild-cmake) 
+     - Remove video encoders: x264, x265, aom, libvpx, xvidcore
+     - LuaSocket is built and included, so [simple-mpv-webui](https://github.com/open-dynaMIX/simple-mpv-webui) can be used out of the box
      - **Test**: mpv from [dyphire/mpv](https://github.com/dyphire/mpv/tree/patch)
        - merged mpv-player/mpv#8865, mpv-player/mpv#9360, mpv-player/mpv#9621, mpv-player/mpv#9664, mpv-player/mpv#9856
        - add `--auto-window-resize`,`--sub-fonts-dir`,`--osd-fonts-dir`,`--subs-fallback`,`--subs-fallback-forced`, and `--sub-ass-feature-*` options
@@ -42,14 +44,12 @@ Same as [shinchiro](https://github.com/shinchiro/mpv-winbuild-cmake/blob/master/
     -   vulkan [![Vulkan-Loader](https://flat.badgen.net/github/last-commit/KhronosGroup/Vulkan-Loader?scale=0.8&cache=1800)](https://github.com/KhronosGroup/Vulkan-Loader) 
     -   ANGLE [![ANGLE](https://flat.badgen.net/gitlab/last-commit/shinchiro/angle?scale=0.8&cache=1800)](https://gitlab.com/shinchiro/angle)
     -   xz [![xz](https://flat.badgen.net/gitlab/last-commit/shinchiro/xz?scale=0.8&cache=1800)](https://gitlab.com/shinchiro/xz)
-    -   x264 [![x264](https://flat.badgen.net/https/gitlab-latest-commit-rphv1x3zj2pi.runkit.sh/code.videolan.org/videolan/x264?scale=0.8&cache=1800)](https://code.videolan.org/videolan/x264)
-    -   x265 (multilib) [![x265](https://flat.badgen.net/https/bitbucket-ft1l4pi7n5hp.runkit.sh/multicoreware/x265_git?scale=0.8&cache=1800)](https://bitbucket.org/multicoreware/x265_git)
     -   uchardet [![uchardet](https://flat.badgen.net/github/last-commit/freedesktop/uchardet?scale=0.8&cache=1800)](https://github.com/freedesktop/uchardet)
     -   rubberband [![rubberband](https://flat.badgen.net/github/last-commit/breakfastquay/rubberband/default?scale=0.8&cache=1800)](https://github.com/breakfastquay/rubberband)
     -   opus [![opus](https://flat.badgen.net/github/last-commit/xiph/opus?scale=0.8&cache=1800)](https://github.com/xiph/opus)
     -   openal-soft [![openal-soft](https://flat.badgen.net/github/last-commit/kcat/openal-soft?scale=0.8&cache=1800)](https://github.com/kcat/openal-soft)
     -   luajit [![luajit](https://flat.badgen.net/github/last-commit/LuaJIT/LuaJIT?scale=0.8&cache=1800)](https://github.com/LuaJIT/LuaJIT)
-    -   libvpx [![libvpx](https://flat.badgen.net/github/last-commit/webmproject/libvpx/main?scale=0.8&cache=1800)](https://chromium.googlesource.com/webm/libvpx)
+    -   luasocket [![luasocket](https://flat.badgen.net/github/last-commit/lunarmodules/luasocket?scale=0.8&cache=1800)](https://github.com/lunarmodules/luasocket.git)
     -   libwebp [![libwebp](https://flat.badgen.net/github/last-commit/webmproject/libwebp/main?scale=0.8&cache=1800)](https://chromium.googlesource.com/webm/libwebp)
     -   libpng [![libpng](https://flat.badgen.net/github/last-commit/glennrp/libpng?scale=0.8&cache=1800)](https://github.com/glennrp/libpng)
     -   libsoxr [![libsoxr](https://flat.badgen.net/gitlab/last-commit/shinchiro/soxr?scale=0.8&cache=1800)](https://gitlab.com/shinchiro/soxr)
@@ -78,7 +78,6 @@ Same as [shinchiro](https://github.com/shinchiro/mpv-winbuild-cmake/blob/master/
     -   avisynth-headers [![avisynth-headers](https://flat.badgen.net/github/last-commit/AviSynth/AviSynthPlus?scale=0.8&cache=1800)](https://github.com/AviSynth/AviSynthPlus)
     -   nvcodec-headers [![nvcodec-headers](https://flat.badgen.net/github/last-commit/FFmpeg/nv-codec-headers?scale=0.8&cache=1800)](https://git.videolan.org/?p=ffmpeg/nv-codec-headers.git)
     -   libmfx [![libmfx](https://flat.badgen.net/github/last-commit/lu-zero/mfx_dispatch?scale=0.8&cache=1800)](https://github.com/lu-zero/mfx_dispatch)
-    -   [aom](https://aomedia.googlesource.com/aom/)
     -   dav1d [![dav1d](https://flat.badgen.net/https/gitlab-latest-commit-rphv1x3zj2pi.runkit.sh/code.videolan.org/videolan/dav1d?scale=0.8&cache=1800)](https://code.videolan.org/videolan/dav1d/)
     -   fontconfig [![uchardet](https://flat.badgen.net/github/last-commit/freedesktop/fontconfig/main?scale=0.8&cache=1800)](https://github.com/freedesktop/fontconfig)
     -   libbs2b [![libbs2b](https://flat.badgen.net/github/last-commit/alexmarsev/libbs2b?scale=0.8&cache=1800)](https://github.com/alexmarsev/libbs2b)
@@ -91,7 +90,6 @@ Same as [shinchiro](https://github.com/shinchiro/mpv-winbuild-cmake/blob/master/
     -   [expat](https://github.com/libexpat/libexpat) (2.4.9)
     -   [bzip](https://sourceware.org/pub/bzip2/) (1.0.8)
     -   [zlib](https://github.com/madler/zlib/) (1.2.12)
-    -   [xvidcore](https://labs.xvid.com/source/) (1.3.7)
     -   [vorbis](https://xiph.org/downloads/) (1.3.7)
     -   [speex](https://ftp.osuosl.org/pub/xiph/releases/speex/) (1.2.1)
     -   [ogg](https://ftp.osuosl.org/pub/xiph/releases/ogg/) (1.3.5)

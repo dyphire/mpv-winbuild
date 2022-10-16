@@ -179,7 +179,7 @@ jobs:
           echo "cache_id=${{ fromJson(needs.params.outputs.params).cache_id }}" >> $GITHUB_ENV
 
       - name: Cache Sources
-        uses: actions/cache@v3.0.1
+        uses: actions/cache@v3.0.11
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/src_packages
           key: ${{ runner.os }}-source-${{ env.short_time }}-${{ env.sha }}-${{ env.cache_id }}
@@ -188,7 +188,7 @@ jobs:
             ${{ runner.os }}-source-${{ env.short_time }}
             ${{ runner.os }}-source
       - name: Cache
-        uses: actions/cache@v3.0.1
+        uses: actions/cache@v3.0.11
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/build${{ matrix.bit }}
           key: ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ env.short_time }}-${{ env.sha }}-${{ env.cache_id }}
@@ -290,13 +290,12 @@ jobs:
         with:
           name: ${{ env.mpv_name }}
           path: ${{ env.mpv_path }}
-          
-      - name: Upload ffmpeg
-        uses: actions/upload-artifact@v3
-        if: ${{ env.ffmpeg_name }}
-        with:
-          name: ${{ env.ffmpeg_name }}
-          path: mpv-winbuild-cmake/release/${{ env.ffmpeg_name }}.7z
+#      - name: Upload ffmpeg
+#        uses: actions/upload-artifact@v3
+#        if: ${{ env.ffmpeg_name }}
+#        with:
+#          name: ${{ env.ffmpeg_name }}
+#          path: mpv-winbuild-cmake/release/${{ env.ffmpeg_name }}.7z
 
 
       - name: "Job summary"
@@ -422,7 +421,7 @@ jobs:
           artifacts: "artifacts/*/*.7z"
           commit: version
           name: "MPV_OWN ${{ env.long_time }}"
-          body: "**MPV git commit**: https://github.com/dyphire/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n- Merged: https://github.com/mpv-player/mpv/pull/8865, https://github.com/mpv-player/mpv/pull/9360, https://github.com/mpv-player/mpv/pull/9621, https://github.com/mpv-player/mpv/pull/9664, https://github.com/mpv-player/mpv/pull/9856\n- Test: add `--auto-window-resize`,`--sub-fonts-dir`,`--osd-fonts-dir`,`--subs-fallback`,`--subs-fallback-forced` and `--sub-ass-feature-*` options\n\n**Build Details**: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}\n**Build Time**: ${{ env.long_time }}"
+          body: "**MPV git commit**: https://github.com/dyphire/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n- Remove video encoders: x264, x265, aom, libvpx, xvidcore\n- LuaSocket is built and included, so [simple-mpv-webui](https://github.com/open-dynaMIX/simple-mpv-webui) can be used out of the box\n- Merged: https://github.com/mpv-player/mpv/pull/8865, https://github.com/mpv-player/mpv/pull/9360, https://github.com/mpv-player/mpv/pull/9621, https://github.com/mpv-player/mpv/pull/9664, https://github.com/mpv-player/mpv/pull/9856\n- Test: add `--auto-window-resize`,`--sub-fonts-dir`,`--osd-fonts-dir`,`--subs-fallback`,`--subs-fallback-forced` and `--sub-ass-feature-*` options\n\n**Build Details**: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}\n**Build Time**: ${{ env.long_time }}"
           tag: "mpv_own-${{ env.short_time }}"
           allowUpdates: true
           artifactErrorsFailBuild: true
