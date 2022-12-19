@@ -1,6 +1,6 @@
 # mpv-build
 
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/dyphire/mpv-winbuild/MPV)](https://github.com/dyphire/mpv-winbuild/actions)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/dyphire/mpv-winbuild/mpv.yml?branch=master)](https://github.com/dyphire/mpv-winbuild/actions)
 [![releases](https://img.shields.io/github/v/release/dyphire/mpv-winbuild)](https://github.com/dyphire/mpv-winbuild/releases)
 [![downloads](https://img.shields.io/github/downloads/dyphire/mpv-winbuild/total)](https://github.com/dyphire/mpv-winbuild/releases)
 
