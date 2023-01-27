@@ -25,7 +25,7 @@ This repo only provides 64-bit version. If you need a 32-bit version, you can fo
 
 > `mpv-dev-x86_64-xxxx.7z` is 64-bit libmpv version, including the `libmpv-2.dll` file.
 > 
-> Some media players based on libmpv will need `libmpv-2.dll`.You can upgrade their built-in libmpv version by overwriting mpv-2.dll.
+> Some media players based on libmpv will need `libmpv-2.dll`.You can upgrade their built-in libmpv version by overwriting libmpv-2.dll.
 
 ### Release Retention Policy
 - The last build of each month is kept for one years.
@@ -41,7 +41,7 @@ Same as [shinchiro](https://github.com/shinchiro/mpv-winbuild-cmake/blob/master/
     -   libass [![libass](https://flat.badgen.net/github/last-commit/libass/libass?scale=0.8&cache=1800)](https://github.com/libass/libass)
     -   libplacebo (with [glad](https://github.com/Dav1dde/glad)) [![libplacebo](https://flat.badgen.net/github/last-commit/haasn/libplacebo?scale=0.8&cache=1800)](https://github.com/haasn/libplacebo)
     -   vulkan-header [![Vulkan-Headers](https://flat.badgen.net/github/last-commit/KhronosGroup/Vulkan-Headers/main?scale=0.8&cache=1800)](https://github.com/KhronosGroup/Vulkan-Headers)
-    -   vulkan [![Vulkan-Loader](https://flat.badgen.net/github/last-commit/KhronosGroup/Vulkan-Loader?scale=0.8&cache=1800)](https://github.com/KhronosGroup/Vulkan-Loader) 
+    -   vulkan [![Vulkan-Loader](https://flat.badgen.net/github/last-commit/KhronosGroup/Vulkan-Loader/main?scale=0.8&cache=1800)](https://github.com/KhronosGroup/Vulkan-Loader) 
     -   ANGLE [![ANGLE](https://flat.badgen.net/gitlab/last-commit/shinchiro/angle/main?scale=0.8&cache=1800)](https://gitlab.com/shinchiro/angle)
     -   xz [![xz](https://flat.badgen.net/gitlab/last-commit/shinchiro/xz?scale=0.8&cache=1800)](https://gitlab.com/shinchiro/xz)
     -   uchardet [![uchardet](https://flat.badgen.net/github/last-commit/freedesktop/uchardet?scale=0.8&cache=1800)](https://github.com/freedesktop/uchardet)
@@ -95,9 +95,9 @@ Same as [shinchiro](https://github.com/shinchiro/mpv-winbuild-cmake/blob/master/
     -   [speex](https://ftp.osuosl.org/pub/xiph/releases/speex/) (1.2.1)
     -   [ogg](https://ftp.osuosl.org/pub/xiph/releases/ogg/) (1.3.5)
     -   [lzo](https://fossies.org/linux/misc/) (2.10)
-    -   [libopenmpt](https://lib.openmpt.org/libopenmpt/download/) (0.6.6)
+    -   [libopenmpt](https://lib.openmpt.org/libopenmpt/download/) (0.6.7)
     -   [libiconv](https://ftp.gnu.org/pub/gnu/libiconv/) (1.17)
     -   [gmp](https://gmplib.org/download/gmp/) (6.2.1)
     -   [vapoursynth](https://github.com/vapoursynth/vapoursynth) (R60)
-    -   [libsdl2](https://www.libsdl.org/release/) (2.24.1)
+    -   [libsdl2](https://www.libsdl.org/release/) (2.26.2)
     -   [mbedtls](https://github.com/Mbed-TLS/mbedtls) (3.3.0)
