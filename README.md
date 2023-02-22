@@ -14,8 +14,8 @@ Use Github Action to build mpv-win with latest commit.
      - Remove video encoders: x264, x265, aom, libvpx, xvidcore
      - LuaSocket is built and included, so [simple-mpv-webui](https://github.com/open-dynaMIX/simple-mpv-webui) can be used out of the box
      - **Test**: mpv from [dyphire/mpv](https://github.com/dyphire/mpv/tree/patch)
-       - merged mpv-player/mpv#8865, mpv-player/mpv#9360, mpv-player/mpv#9621, mpv-player/mpv#9664, mpv-player/mpv#9856
-       - add `--auto-window-resize`,`--sub-fonts-dir`,`--osd-fonts-dir`,`--subs-fallback`,`--subs-fallback-forced`, `--secondary-sub-override` and `--sub-ass-feature-*` options
+       - merged mpv-player/mpv#9664, mpv-player/mpv#9856
+       - add `--sub-fonts-dir`,`--osd-fonts-dir`, `--secondary-sub-override` and `--sub-ass-feature-*` options
 
 ## Auto-Builds
 
