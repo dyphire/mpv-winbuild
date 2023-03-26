@@ -312,12 +312,12 @@ jobs:
         with:
           name: ${{ env.mpv_name }}
           path: ${{ env.mpv_path }}
-#      - name: Upload ffmpeg
-#        uses: actions/upload-artifact@v3
-#        if: ${{ env.ffmpeg_name }}
-#        with:
-#          name: ${{ env.ffmpeg_name }}
-#          path: mpv-winbuild-cmake/release/${{ env.ffmpeg_name }}.7z
+      - name: Upload ffmpeg
+        uses: actions/upload-artifact@v3
+        if: ${{ env.ffmpeg_name }}
+        with:
+          name: ${{ env.ffmpeg_name }}
+          path: mpv-winbuild-cmake/release/${{ env.ffmpeg_name }}.7z
 
       - name: Save Sources Cache
         if: ${{ github.ref_name == 'master' }}
@@ -458,10 +458,10 @@ jobs:
         uses: ncipollo/release-action@v1
         if: ${{ ( fromJson(needs.params.outputs.params).winbuild_repo == 'dyphire/mpv-winbuild-cmake' && fromJson(needs.params.outputs.params).winbuild_ref == 'patch' ) }}
         with:
-          artifacts: "artifacts/*/mpv*.7z"
+          artifacts: "artifacts/*/mpv*.7z,artifacts/*/ffmpeg*.7z"
           commit: version
           name: "MPV_OWN ${{ env.long_time }}"
-          body: "**MPV git commit**: https://github.com/dyphire/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n- Remove video encoders: x264, x265, aom, libvpx, xvidcore\n- LuaSocket is built and included, so [simple-mpv-webui](https://github.com/open-dynaMIX/simple-mpv-webui) can be used out of the box\n- Test: add `--secondary-sub-override` and `--sub-ass-feature-*` options\n\n**Build Details**: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}\n**Build Time**: ${{ env.long_time }}"
+          body: "**MPV git commit**: https://github.com/dyphire/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n- LuaSocket is built and included, so [simple-mpv-webui](https://github.com/open-dynaMIX/simple-mpv-webui) can be used out of the box\n- Test: add `--secondary-sub-override` and `--sub-ass-feature-*` options\n\n**Build Details**: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}\n**Build Time**: ${{ env.long_time }}"
           tag: "mpv_own-${{ env.short_time }}"
           allowUpdates: true
           artifactErrorsFailBuild: true
@@ -472,7 +472,7 @@ jobs:
         uses: ncipollo/release-action@v1
         if: ${{ ( fromJson(needs.params.outputs.params).winbuild_repo == 'shinchiro/mpv-winbuild-cmake') }}
         with:
-          artifacts: "artifacts/*/mpv*.7z"
+          artifacts: "artifacts/*/mpv*.7z,artifacts/*/ffmpeg*.7z"
           commit: version
           name: "MPV ${{ env.long_time }}"
           body: "**MPV git commit**: https://github.com/mpv-player/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n**Build Details**: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}\n**Build Time**: ${{ env.long_time }}"
