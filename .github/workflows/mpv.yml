@@ -157,7 +157,7 @@ jobs:
           sudo echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
           sudo pacman -Syu --noconfirm
           sudo pacman -S --noconfirm --needed git gyp mercurial subversion ninja cmake ragel yasm nasm asciidoc enca gperf unzip p7zip gcc-multilib clang python-pip curl lib32-glib2 wget
-          pip3 install -U setuptools rst2pdf mako jsonschema https://github.com/mesonbuild/meson/archive/refs/heads/master.zip
+          pip3 install -U setuptools rst2pdf mako jsonschema meson
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global pull.rebase true
@@ -461,7 +461,7 @@ jobs:
           artifacts: "artifacts/*/mpv*.7z,artifacts/*/ffmpeg*.7z"
           commit: version
           name: "MPV_OWN ${{ env.long_time }}"
-          body: "**MPV git commit**: https://github.com/dyphire/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n- LuaSocket is built and included, so [simple-mpv-webui](https://github.com/open-dynaMIX/simple-mpv-webui) can be used out of the box\n- Test: add `--secondary-sub-override` and `--sub-ass-feature-*` options\n\n**Build Details**: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}\n**Build Time**: ${{ env.long_time }}"
+          body: "**MPV git commit**: https://github.com/dyphire/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n- LuaSocket is built and included, so [simple-mpv-webui](https://github.com/open-dynaMIX/simple-mpv-webui) can be used out of the box\n- Merged: https://github.com/mpv-player/mpv/pull/8845, https://github.com/mpv-player/mpv/pull/8865, https://github.com/mpv-player/mpv/pull/9664, https://github.com/mpv-player/mpv/pull/10316, https://github.com/mpv-player/mpv/pull/10862, https://github.com/mpv-player/mpv/pull/11430 \n- Test: add `--subs-fallback`,`--subs-fallback-forced`,`--secondary-sub-override` and `--sub-ass-feature-*` options\n\n**Build Details**: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}\n**Build Time**: ${{ env.long_time }}"
           tag: "mpv_own-${{ env.short_time }}"
           allowUpdates: true
           artifactErrorsFailBuild: true
