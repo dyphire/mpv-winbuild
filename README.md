@@ -12,7 +12,7 @@ Use Github Action to build mpv-win with latest commit.
 
   - **MPV_OWN** Based on https://github.com/dyphire/mpv-winbuild-cmake. [![mpv-winbuild-cmake](https://flat.badgen.net/github/last-commit/dyphire/mpv-winbuild-cmake?scale=0.8&cache=1800)](https://github.com/dyphire/mpv-winbuild-cmake) 
      - LuaSocket is built and included, so [simple-mpv-webui](https://github.com/open-dynaMIX/simple-mpv-webui) can be used out of the box
-     - Merged: https://github.com/mpv-player/mpv/pull/8845, https://github.com/mpv-player/mpv/pull/8865, https://github.com/mpv-player/mpv/pull/9664, https://github.com/mpv-player/mpv/pull/10316, https://github.com/mpv-player/mpv/pull/10862
+     - Merged: https://github.com/mpv-player/mpv/pull/8845, https://github.com/mpv-player/mpv/pull/9664, https://github.com/mpv-player/mpv/pull/10316, https://github.com/mpv-player/mpv/pull/10862
      - Test: add `--subs-fallback`,`--subs-fallback-forced`,`--secondary-sub-override` and `--sub-ass-feature-*` options
 
 ## Auto-Builds
