@@ -48,14 +48,15 @@ build() {
     local gcc_arch=$3
     
     cmake -DTARGET_ARCH=$arch-w64-mingw32 $gcc_arch -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$srcdir -DRUSTUP_LOCATION=$buildroot/install_rustup -G Ninja -H$gitdir -B$buildroot/build$bit
+    ninja -C $buildroot/build$bit {libzvbi,libopenmpt}-removeprefix || true
     ninja -C $buildroot/build$bit download || true
     if [[ ! "$(ls -A $buildroot/build$bit/install/bin)" ]]; then
         ninja -C $buildroot/build$bit gcc
-    elif [[ ! "$(ls -A $buildroot/install_rustup/.cargo/bin)" ]]; then
+    fi
+    if [[ ! "$(ls -A $buildroot/install_rustup/.cargo/bin)" ]]; then
         ninja -C $buildroot/build$bit rustup-fullclean
         ninja -C $buildroot/build$bit rustup
     fi
-    ninja -C $buildroot/build$bit libzvbi-removeprefix
     ninja -C $buildroot/build$bit update
     ninja -C $buildroot/build$bit mpv-fullclean
     ninja -C $buildroot/build$bit libjxl
