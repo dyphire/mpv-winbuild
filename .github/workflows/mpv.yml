@@ -46,9 +46,6 @@ on:
       command:
         description: 'input command you want to run before build'
         required: false
-      cache_id:
-        description: 'input cache_id if you want to renew cache'
-        required: false
 
 # Workflow level env does not work properly in all fields.
 # https://github.com/actions/runner/issues/480
@@ -68,13 +65,6 @@ jobs:
       params: ${{ steps.env-vars.outputs.params }}
       matrix: ${{ steps.script.outputs.matrix }}
     steps:
-      - name: Generate cache_id
-        run: |
-          if [ "${{ github.event.inputs.cache_id }}" ] ; then
-            echo "cache_id=${{ github.event.inputs.cache_id }}" >> $GITHUB_ENV
-          else
-            echo "cache_id=$(echo $RANDOM | md5sum | head -c 20)" >> $GITHUB_ENV
-          fi
       - name: Set winbuild_repo
         run: |
           if [ "${{ github.event.inputs.winbuild_repo }}" ] ; then
@@ -176,8 +166,7 @@ jobs:
         run: |
           echo "sha=${{ fromJson(needs.params.outputs.params).sha }}" >> $GITHUB_ENV
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
-          echo "cache_id=${{ fromJson(needs.params.outputs.params).cache_id }}" >> $GITHUB_ENV
-          echo "cache_suffix=$(date "+%Y-%m-%d")-${{ fromJson(needs.params.outputs.params).sha }}-${{ fromJson(needs.params.outputs.params).cache_id }}" >> $GITHUB_ENV
+          echo "cache_suffix=$(date "+%Y-%m-%d")-${{ github.run_id }}:${{ github.run_attempt }}" >> $GITHUB_ENV
 
       - name: Restore Source Cache
         if: ${{ github.event.inputs.needclean != 'true' }}
@@ -185,27 +174,27 @@ jobs:
         id: cache_source
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/src_packages
-          key: ${{ runner.os }}-source-${{ env.cache_suffix }}
+          key: source-${{ env.cache_suffix }}
           restore-keys: |
-            ${{ runner.os }}-source
+            source-
       - name: Restore Rust Cache
         if: ${{ github.event.inputs.needclean != 'true' }}
         uses: actions/cache/restore@v3.3.0
         id: cache_rust
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/install_rustup
-          key: ${{ runner.os }}-rust-${{ env.cache_suffix }}
+          key: rust-${{ env.cache_suffix }}
           restore-keys: |
-            ${{ runner.os }}-rust
+            rust-
       - name: Restore Build Cache
         if: ${{ github.event.inputs.needclean != 'true' }}
         uses: actions/cache/restore@v3.3.0
         id: cache_build
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/build${{ matrix.bit }}
-          key: ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ env.cache_suffix }}
+          key: mpv-build${{ matrix.bit }}-${{ env.cache_suffix }}
           restore-keys: |
-            ${{ runner.os }}-mpv-build${{ matrix.bit }}
+            mpv-build${{ matrix.bit }}-
 
       - name: Running custom command
         if: ${{ github.event.inputs.command != '' }}
@@ -323,19 +312,19 @@ jobs:
         uses: actions/cache/save@v3.3.0
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/src_packages
-          key: ${{ runner.os }}-source-${{ env.cache_suffix }}
+          key: source-${{ env.cache_suffix }}
       - name: Save Rust Cache
         if: ${{ github.ref_name == 'master' }}
         uses: actions/cache/save@v3.3.0
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/install_rustup
-          key: ${{ runner.os }}-rust-${{ env.cache_suffix }}
+          key: rust-${{ env.cache_suffix }}
       - name: Save Build Cache
         if: ${{ github.ref_name == 'master' }}
         uses: actions/cache/save@v3.3.0
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/build${{ matrix.bit }}
-          key: ${{ runner.os }}-mpv-build${{ matrix.bit }}-${{ env.cache_suffix }}
+          key: mpv-build${{ matrix.bit }}-${{ env.cache_suffix }}
 
       - name: "Job summary"
         uses: actions/github-script@v6
