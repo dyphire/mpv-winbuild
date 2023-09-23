@@ -494,11 +494,12 @@ jobs:
         run: |
           echo "long_time=$(date "+%Y-%m-%d %H:%M")" >> $GITHUB_ENV
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
+          echo "tag_name=$(date "+%Y-%m-%d")-$(head -c 7 <<< "${{ fromJson(needs.params.outputs.params).sha }}")"  >> $GITHUB_ENV
 
       - name: Commit version & remove existing tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${env.short_time}-${{fromJson(needs.params.outputs.params).sha}}
+          tag_name: ${{ env.tag_name }}
         shell: bash
         run: |
           git fetch --tags
@@ -522,7 +523,7 @@ jobs:
           commit: version
           name: "MPV_OWN ${{ env.long_time }}"
           body: "**MPV git commit**: https://github.com/dyphire/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n- LuaSocket is built and included, so [simple-mpv-webui](https://github.com/open-dynaMIX/simple-mpv-webui) can be used out of the box\n- Merged: https://github.com/mpv-player/mpv/pull/8845, https://github.com/mpv-player/mpv/pull/9664, https://github.com/mpv-player/mpv/pull/10316, https://github.com/mpv-player/mpv/pull/10862 \n- Test: add `--icy-codepage`,`--secondary-sub-override` and `--sub-ass-feature-*` options\n\n**Build Details**: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}\n**Build Time**: ${{ env.long_time }}"
-          tag: "mpv_own-${tag_name}"
+          tag: "mpv_own-${{ env.short_time }}"
           allowUpdates: true
           artifactErrorsFailBuild: true
           removeArtifacts: true
@@ -537,7 +538,7 @@ jobs:
           commit: version
           name: "MPV ${{ env.long_time }}"
           body: "**MPV git commit**: https://github.com/mpv-player/mpv/commit/${{ fromJson(needs.params.outputs.params).sha }}\n**Build Details**: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}\n**Build Time**: ${{ env.long_time }}"
-          tag: "mpv-${tag_name}"
+          tag: "mpv-${{ env.short_time }}"
           allowUpdates: true
           artifactErrorsFailBuild: true
           removeArtifacts: true
