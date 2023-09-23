@@ -28,6 +28,13 @@ on:
         - 64bit-v3
         - all-64bit
         - all
+      compiler:
+        required: false
+        default: "gcc"
+        type: choice
+        options:
+        - gcc
+        - clang
       needclean:
         description: 'Delete cache and completely rebuild erverything'
         required: false
@@ -146,18 +153,19 @@ jobs:
         run: |
           sudo echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
           sudo pacman -Syu --noconfirm
-          sudo pacman -S --noconfirm --needed git gyp mercurial subversion ninja cmake ragel yasm nasm asciidoc enca gperf unzip p7zip gcc-multilib clang python-pip curl lib32-glib2 wget python-cairo
+          sudo pacman -S --noconfirm --needed git gyp ninja cmake ragel yasm nasm asciidoc enca gperf unzip xz gcc-multilib clang lld libc++ libc++abi python-pip curl lib32-glib2 wget python-cairo
+          mkdir -p /home/opt/7zip
+          wget -qO - https://www.7-zip.org/a/7z2301-linux-x64.tar.xz | tar -xJf - -C /home/opt/7zip 7zzs
+          sudo ln -s /home/opt/7zip/7zzs /usr/bin/7z
           pip3 install -U --break-system-packages setuptools rst2pdf mako jsonschema meson
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global pull.rebase true
           git config --global rebase.autoStash true
           git config --global fetch.prune true
-          git config --global --add safe.directory $(pwd)
-          git config --global --add safe.directory $(pwd)/mpv-winbuild-cmake
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Checkout toolchain
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: ${{ fromJson(needs.params.outputs.params).winbuild_repo }}
           ref: ${{ fromJson(needs.params.outputs.params).winbuild_ref }}
@@ -166,43 +174,94 @@ jobs:
         run: |
           echo "sha=${{ fromJson(needs.params.outputs.params).sha }}" >> $GITHUB_ENV
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
-          echo "cache_suffix=$(date "+%Y-%m-%d")-${{ github.run_id }}:${{ github.run_attempt }}" >> $GITHUB_ENV
+          echo "cache_suffix=$(date "+%Y-%m-%d")-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_ENV
 
-      - name: Restore Source Cache
-        if: ${{ github.event.inputs.needclean != 'true' }}
-        uses: actions/cache/restore@v3.3.0
-        id: cache_source
+      - name: Lookup Toolchain Cache
+        id: lookup_toolchain
+        uses: actions/cache/restore@v3.3.2
         with:
-          path: ${{ github.workspace }}/mpv-winbuild-cmake/src_packages
-          key: source-${{ env.cache_suffix }}
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/build${{ matrix.bit }}
+          key: toolchain-${{ inputs.compiler }}-build${{ matrix.bit }}-${{ env.cache_suffix }}
           restore-keys: |
-            source-
+            toolchain-${{ inputs.compiler }}-build${{ matrix.bit }}-
+          lookup-only: true
+      - name: Lookup Build Cache
+        id: lookup_build
+        uses: actions/cache/restore@v3.3.2
+        with:
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/build${{ matrix.bit }}
+          key: ${{ inputs.compiler }}-build${{ matrix.bit }}-${{ env.cache_suffix }}
+          restore-keys: |
+            ${{ inputs.compiler }}-build${{ matrix.bit }}-
+          lookup-only: true
+          
+      - name: Generate cache key
+        id: generate_key
+        uses: actions/github-script@v6
+        with:
+          script: |
+            let toolchain_restore_key="${{ steps.lookup_toolchain.outputs.cache-matched-key }}";
+            let build_restore_key="${{ steps.lookup_build.outputs.cache-matched-key }}";
+            let build_save_key="${{ inputs.compiler }}-build${{ matrix.bit }}-${{ env.cache_suffix }}";
+            let key_suffix= "${{ env.cache_suffix }}"
+            let restore_suffix= ""; // if only want to match primaryKey, set a value which make restore-keys can't hit
+            
+            // If toolchain cache exist, compare version of toolchain and build
+            if (toolchain_restore_key) {
+              const toolchain_version = toolchain_restore_key.split("-build${{ matrix.bit }}-").at(-1);
+              build_save_key += `(${toolchain_version})`;
+              // If build cache version is not same as toolchain or needclean=true, don't restore build cache.
+              // Else, don't restore toolchain cache and use build cache.
+              if ( !build_restore_key.includes(toolchain_version) || ${{ github.event.inputs.needclean == 'true' }} ) {
+                build_restore_key="";
+                key_suffix=toolchain_version;  // only use same version cache as toolchain-version
+                restore_suffix="-only-use-primaryKey-";  // make restore-keys can't hit
+              } else {
+                toolchain_restore_key="";
+              }
+            }
+            core.exportVariable( `toolchain_restore_key`, toolchain_restore_key );
+            core.exportVariable( `build_restore_key`, build_restore_key );
+            core.exportVariable( `build_save_key`, build_save_key );
+            core.exportVariable( `key_suffix`, key_suffix );
+            core.exportVariable( `restore_suffix`, restore_suffix );
+
       - name: Restore Rust Cache
-        if: ${{ github.event.inputs.needclean != 'true' }}
-        uses: actions/cache/restore@v3.3.0
+        uses: actions/cache/restore@v3.3.2
         id: cache_rust
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/install_rustup
-          key: rust-${{ env.cache_suffix }}
+          key: rust-${{ env.key_suffix }}
           restore-keys: |
-            rust-
-      - name: Restore Build Cache
-        if: ${{ github.event.inputs.needclean != 'true' }}
-        uses: actions/cache/restore@v3.3.0
-        id: cache_build
+            rust-${{ env.restore_suffix }}
+      - name: Restore Source Cache
+        uses: actions/cache/restore@v3.3.2
+        with:
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/src_packages
+          key: source-${{ env.key_suffix }}
+          restore-keys: |
+            source-${{ env.restore_suffix }}
+      - name: Restore Toolchain Cache
+        if: ${{ env.toolchain_restore_key != '' }}
+        uses: actions/cache/restore@v3.3.2
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/build${{ matrix.bit }}
-          key: mpv-build${{ matrix.bit }}-${{ env.cache_suffix }}
-          restore-keys: |
-            mpv-build${{ matrix.bit }}-
+          key: ${{ env.toolchain_restore_key }}
+      - name: Restore Build Cache
+        if: ${{ github.event.inputs.needclean != 'true' && env.build_restore_key != '' }}
+        uses: actions/cache/restore@v3.3.2
+        with:
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/build${{ matrix.bit }}
+          key: ${{ env.build_restore_key }}
 
       - name: Running custom command
-        if: ${{ github.event.inputs.command != '' }}
+        if: ${{ inputs.command != '' }}
         shell: bash
         continue-on-error: true
         run: |
           cd mpv-winbuild-cmake
           bit="${{ matrix.bit }}"
+          compiler="${{ inputs.compiler }}"
           gitdir=$(pwd)
           buildroot=$(pwd)
           srcdir=$(pwd)/src_packages
@@ -241,16 +300,16 @@ jobs:
               git am --3way "$patch" || git am --abort
             done
           fi
-          bash ../build.sh '${{ matrix.bit }}'
-      - name: Collect error logs
-        if: ${{ always() && steps.build.outcome == 'failure' }}
+          bash ../build.sh -t '${{ matrix.bit }}' -c '${{ inputs.compiler }}'
+      - name: Collect logs
+        if: ${{ always() }}
         run: |
-          sudo 7z a logs.7z mpv-winbuild-cmake/build${{ matrix.bit }}/*-*.log -r
-      - name: Upload error logs
-        uses: actions/upload-artifact@master
-        if: ${{ always() && steps.build.outcome == 'failure' }}
+          sudo 7z a logs.7z $(find mpv-winbuild-cmake/build${{ matrix.bit }} -type f -iname "*-*.log" -or -wholename "*/ffbuild/config.log")
+      - name: upload logs
+        uses: actions/upload-artifact@v3
+        if: ${{ always() }}
         with:
-          name: logs
+          name: ${{ matrix.bit }}_logs
           path: logs.7z
 
       - name: "Get artifacts' name and path"
@@ -286,7 +345,9 @@ jobs:
             ffmpeg_hash = ffmpeg_hash.trim();
             const ffmpeg_name = `ffmpeg-${arch}-git-${ffmpeg_hash}`;
             core.exportVariable( 'ffmpeg_name', ffmpeg_name );
-            await exec.exec(`7z a -m0=lzma2 -mx=9 -ms=on mpv-winbuild-cmake/release/${ffmpeg_name}.7z ./mpv-winbuild-cmake/build${{ matrix.bit }}/install/mingw/bin/ffmpeg.exe`)
+            const globber = await glob.create(`./mpv-winbuild-cmake/build${{ matrix.bit }}/**/ffmpeg.exe`);
+            const ffmpeg_path = (await globber.glob())[0]
+            await exec.exec(`7z a -m0=lzma2 -mx=9 -ms=on mpv-winbuild-cmake/release/${ffmpeg_name}.7z ${ffmpeg_path}`)
 
       - name: Upload mpv-dev
         uses: actions/upload-artifact@v3
@@ -308,23 +369,23 @@ jobs:
           path: mpv-winbuild-cmake/release/${{ env.ffmpeg_name }}.7z
 
       - name: Save Sources Cache
-        if: ${{ github.ref_name == 'master' }}
-        uses: actions/cache/save@v3.3.0
+        if: ${{ github.event.inputs.no_save_cache != 'true' }}
+        uses: actions/cache/save@v3.3.2
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/src_packages
           key: source-${{ env.cache_suffix }}
       - name: Save Rust Cache
-        if: ${{ github.ref_name == 'master' }}
-        uses: actions/cache/save@v3.3.0
+        if: ${{ github.event.inputs.no_save_cache != 'true' }}
+        uses: actions/cache/save@v3.3.2
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/install_rustup
           key: rust-${{ env.cache_suffix }}
       - name: Save Build Cache
-        if: ${{ github.ref_name == 'master' }}
-        uses: actions/cache/save@v3.3.0
+        if: ${{ github.event.inputs.no_save_cache != 'true' }}
+        uses: actions/cache/save@v3.3.2
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/build${{ matrix.bit }}
-          key: mpv-build${{ matrix.bit }}-${{ env.cache_suffix }}
+          key: ${{ env.build_save_key }}
 
       - name: "Job summary"
         uses: actions/github-script@v6
@@ -373,18 +434,21 @@ jobs:
                 }
                 return url;
             }
-            
+            async function repo_info(dir){
+              let local_hash = await myExec(`git -C ${dir} rev-parse --short=7 HEAD`);
+              let remote_branch = await myExec(`git -C ${dir} rev-parse --abbrev-ref HEAD@{upstream}`);
+              let remote_hash = await myExec(`git -C ${dir} rev-parse ${remote_branch}`);
+              let status = await myExec(`git -C ${dir} status -sb`).then(s => s.split("\n",1)[0].replace(/^## */,""));
+              let remote = await myExec(`git -C ${dir} config --get remote.origin.url`);
+              return [local_hash, remote_hash, status, remote]
+            }
             async function generateGitInfoTable(targetDir){
               const dirs = readdirSync(targetDir, { withFileTypes: true })
                 .filter(dirent => dirent.isDirectory() && isGitSync(dirent.name) )
                 .map(dirent => path.join(targetDir, dirent.name));
               let info_table = [[{data: 'Package', header: true}, {data: 'Local commit', header: true}, {data: 'Status', header: true}, {data: 'Remote commit', header: true}]];
               for (let dir of dirs) {
-                let local_hash = await myExec(`git -C ${dir} rev-parse --short=7 HEAD`);
-                let remote_branch = await myExec(`git -C ${dir} rev-parse --abbrev-ref HEAD@{upstream}`);
-                let remote_hash = await myExec(`git -C ${dir} rev-parse ${remote_branch}`);
-                let status = await myExec(`git -C ${dir} status -sb`).then(s => s.split("\n",1)[0].replace(/^## */,""));
-                let remote = await myExec(`git -C ${dir} config --get remote.origin.url`);
+                [local_hash, remote_hash, status, remote] = await repo_info(dir)
                 let url = getCommitUrl(remote_hash, remote);
                 let package_name = path.basename(dir);
                 info_table.push([package_name, local_hash, status, `<a href="${url}">${remote_hash.slice(0,7)}</a>`]);
@@ -392,12 +456,12 @@ jobs:
               return info_table;
             }
             const packages_table = await generateGitInfoTable(workdir);
-            const upstream_hash = await myExec(`git -C ${upstreamDir} rev-parse HEAD`);
-            const upstream_remote = await myExec(`git -C ${upstreamDir} config --get remote.origin.url`);
-            const upstream_url = getCommitUrl(upstream_hash, upstream_remote);
+            [upstream_local_hash, upstream_remote_hash, upstream_status, upstream_remote] = await repo_info(upstreamDir)
+            const upstream_url = getCommitUrl(upstream_remote_hash, upstream_remote);
             
             await core.summary
-            .addRaw(`mpv-winbuild-cmake: <a href="${upstream_url}">${upstream_hash.slice(0,7)}</a>`,true)
+            .addRaw(`mpv-winbuild-cmake: ${upstream_status} (remote:<a href="${upstream_url}">${upstream_remote_hash.slice(0,7)}</a>)`,true)
+            .addRaw(`Compiler: ${{ inputs.compiler }}`,true);
             .addHeading('Packages Version')
             .addTable(packages_table)
             .write();
