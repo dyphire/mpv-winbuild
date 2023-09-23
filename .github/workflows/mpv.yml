@@ -461,6 +461,7 @@ jobs:
           artifactErrorsFailBuild: true
           removeArtifacts: true
           prerelease: false
+          makeLatest: true
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Create release for mpv-player/mpv
         uses: ncipollo/release-action@v1
@@ -475,6 +476,7 @@ jobs:
           artifactErrorsFailBuild: true
           removeArtifacts: true
           prerelease: false
+          makeLatest: true
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Prune old releases
         env:
