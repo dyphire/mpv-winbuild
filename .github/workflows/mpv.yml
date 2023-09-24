@@ -1,4 +1,5 @@
 name: MPV
+run-name: "${{ format('{0} ({1})', github.workflow, inputs.compiler) }}"
 
 on: 
   schedule:
