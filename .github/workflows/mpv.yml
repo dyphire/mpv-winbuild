@@ -1,5 +1,5 @@
 name: MPV
-run-name: "${{ format('{0} ({1})', github.workflow, inputs.compiler) }}"
+run-name: "${{ inputs.compiler != '' && format('{0} ({1})', github.workflow, inputs.compiler) || format('{0} ({1})', github.workflow, 'gcc') }}"
 
 on: 
   schedule:
