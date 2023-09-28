@@ -3,7 +3,7 @@ run-name: "${{ inputs.compiler != '' && format('{0} ({1})', github.workflow, inp
 
 on: 
   schedule:
-    - cron: '0 8 * * */4'
+    - cron: '0 8 * * *'
   workflow_dispatch:
     inputs:
       winbuild_repo:
