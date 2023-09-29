@@ -558,13 +558,13 @@ jobs:
             const sha = `${{ fromJson(needs.params.outputs.params).sha }}`;
             const winbuild_repo = `${{ fromJson(needs.params.outputs.params).winbuild_repo }}`;
             const winbuild_ref = `${{ fromJson(needs.params.outputs.params).winbuild_ref }}`;
-            let note = `**MPV Git commit**: https://github.com/mpv-player/mpv/commit/${sha}\n`;
-            if ( "${winbuild_repo}" == "dyphire/mpv-winbuild-cmake" && "${winbuild_ref}" == "patch" ) {
-              let note = `**MPV Git commit**: https://github.com/dyphire/mpv/commit/${sha}\n`;
+            let note = "";
+            if ( winbuild_repo == 'dyphire/mpv-winbuild-cmake' && winbuild_ref == 'patch' ) {
+              note+=`**MPV Git commit**: https://github.com/dyphire/mpv/commit/${sha}\n`;
+              note+="**Changed**\n";
+              note+="- LuaSocket is built and included, so [simple-mpv-webui](https://github.com/open-dynaMIX/simple-mpv-webui) can be used out of the box\n";
               note+="- Merged: https://github.com/mpv-player/mpv/pull/8845, https://github.com/mpv-player/mpv/pull/9664, https://github.com/mpv-player/mpv/pull/10316, https://github.com/mpv-player/mpv/pull/10862 \n";
               note+="- Test: add `--icy-codepage`,`--secondary-sub-override` and `--sub-ass-feature-*` options\n\n";
-              note+="**Changed**\n";
-              note+="- LuaSocket is built and included, so [simple-mpv-webui](https://github.com/open-dynaMIX/simple-mpv-webui) can be used out of the box\n\n";
               note+="**Fixes and Minor Enhancements**\n";
               note+="- davs2: enable 10bit\n";
               note+="- libass: parse script properties even if missing '[Script Info]'\n";
@@ -573,6 +573,8 @@ jobs:
               note+="- FFmpeg: only handle negative durations for non-ASS subs\n";
               note+="- FFmpeg: handle long TrueHD input_timing gaps\n";
               note+="- FFmpeg: potential TrueHD FFmpeg Passthrough Fix\n\n";
+            } else {
+              note+=`**MPV Git commit**: https://github.com/mpv-player/mpv/commit/${sha}\n`;
             }
             note+="**Build Time**: ${{ env.long_time }}\n";
             note+="**Compiler**: ${{ inputs.compiler }}\n";
