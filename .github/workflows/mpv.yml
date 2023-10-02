@@ -1,9 +1,9 @@
 name: MPV
-run-name: "${{ inputs.compiler != '' && format('{0} ({1})', github.workflow, inputs.compiler) || format('{0} ({1})', github.workflow, 'gcc') }}"
+run-name: "${{ format('{0} ({1})', github.workflow, inputs.compiler) }}"
 
 on: 
-  schedule:
-    - cron: '0 8 * * *'
+#  schedule:
+#    - cron: '0 8 * * *'
   workflow_dispatch:
     inputs:
       winbuild_repo:
@@ -33,7 +33,7 @@ on:
       needclean:
         description: 'Delete cache and completely rebuild erverything'
         required: false
-        default: 'false'
+        default: false
         type: boolean
       no_save_cache:
         description: "Don't save caches after success build"
@@ -43,12 +43,7 @@ on:
       release:
         description: "Publish a release"
         required: false
-        default: 'true'
-        type: boolean
-      prune:
-        description: "Prune old releases"
-        required: false
-        default: 'true'
+        default: true
         type: boolean
       command:
         description: 'input command you want to run before build'
@@ -59,42 +54,29 @@ on:
 env:
   winbuildrepo: 'dyphire/mpv-winbuild-cmake'
   winbuildref: 'patch'
-  release: 'true'
-  prune: 'true'
+  mpvowner: 'dyphire'
+  mpvref: 'patch'
 
 jobs:
   # https://github.com/actions/runner/issues/480#issuecomment-1055373623
   params:
     runs-on: ubuntu-latest
     outputs:
+      sha: ${{ steps.script.outputs.sha }}
       params: ${{ steps.env-vars.outputs.params }}
       matrix: ${{ steps.script.outputs.matrix }}
     steps:
-      - name: Set winbuild_repo
-        run: |
-          if [ "${{ github.event.inputs.winbuild_repo }}" ] ; then
-            echo "winbuild_repo=${{ github.event.inputs.winbuild_repo }}" >> $GITHUB_ENV
-          else
-            echo "winbuild_repo=${{ env.winbuildrepo }}" >> $GITHUB_ENV
-          fi
-      - name: Set winbuild_ref
-        run: |
-          if [ "${{ github.event.inputs.winbuild_ref }}" ] ; then
-            echo "winbuild_ref=${{ github.event.inputs.winbuild_ref }}" >> $GITHUB_ENV
-          else
-            echo "winbuild_ref=${{ env.winbuildref }}" >> $GITHUB_ENV
-          fi
       - name: Set mpv_owner
         run: |
-          if [[ "${{ env.winbuild_repo}}" == "dyphire/mpv-winbuild-cmake" && "${{ env.winbuild_ref}}" == "patch" ]] ; then
-            echo "mpv_owner=dyphire" >> $GITHUB_ENV
+          if [[ "${{ inputs.winbuild_repo }}" == "${{ env.winbuildrepo }}" && "${{ inputs.winbuild_ref }}" == "${{ env.winbuildref }}" ]] ; then
+            echo "mpv_owner=${{ env.mpvowner }}" >> $GITHUB_ENV
           else
             echo "mpv_owner=mpv-player" >> $GITHUB_ENV
           fi
       - name: Set mpv_ref
         run: |
-          if [[ "${{ env.winbuild_repo}}" == "dyphire/mpv-winbuild-cmake" && "${{ env.winbuild_ref}}" == "patch" ]] ; then
-            echo "mpv_ref=patch" >> $GITHUB_ENV
+          if [[ "${{ inputs.winbuild_repo }}" == "${{ env.winbuildrepo }}" && "${{ inputs.winbuild_ref }}" == "${{ env.winbuildref }}" ]] ; then
+            echo "mpv_ref=${{ env.mpvref }}" >> $GITHUB_ENV
           else
             echo "mpv_ref=master" >> $GITHUB_ENV
           fi
@@ -107,10 +89,10 @@ jobs:
               repo: 'mpv',
               ref: '${{ env.mpv_ref }}'
             })
-            core.exportVariable('sha', String(commit.data.sha))
+            core.setOutput('sha', String(commit.data.sha))
             
             let matrix = {};
-            let build_target = "${{ github.event.inputs.build_target }}"
+            let build_target = "${{ inputs.build_target }}"
             switch ( build_target ) {
               case "32bit":
                 matrix.bit = ["32"];
@@ -162,17 +144,21 @@ jobs:
           git config --global rebase.autoStash true
           git config --global fetch.prune true
       - uses: actions/checkout@v4
+      - name: Get Params
+        run: |
+          echo "sha=${{ needs.params.outputs.sha }}" >> $GITHUB_ENV
+          echo "winbuild_repo=${{ inputs.winbuild_repo }}" >> $GITHUB_ENV
+          echo "winbuild_ref=${{ inputs.winbuild_ref }}" >> $GITHUB_ENV
+          echo "mpv_owner=${{ fromJson(needs.params.outputs.params).mpv_owner }}" >> $GITHUB_ENV
+          echo "mpv_ref=${{ fromJson(needs.params.outputs.params).mpv_ref }}" >> $GITHUB_ENV
+          echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
+          echo "cache_suffix=$(date "+%Y-%m-%d")-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_ENV
       - name: Checkout toolchain
         uses: actions/checkout@v4
         with:
-          repository: ${{ fromJson(needs.params.outputs.params).winbuild_repo }}
-          ref: ${{ fromJson(needs.params.outputs.params).winbuild_ref }}
+          repository: ${{ inputs.winbuild_repo }}
+          ref: ${{ inputs.winbuild_ref }}
           path: mpv-winbuild-cmake
-      - name: Get Params
-        run: |
-          echo "sha=${{ fromJson(needs.params.outputs.params).sha }}" >> $GITHUB_ENV
-          echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
-          echo "cache_suffix=$(date "+%Y-%m-%d")-${{ github.run_id }}-${{ github.run_attempt }}" >> $GITHUB_ENV
 
       - name: Lookup Toolchain Cache
         id: lookup_toolchain
@@ -212,7 +198,7 @@ jobs:
               build_save_key += `(${toolchain_version})`;
               // If build cache version is not same as toolchain or needclean=true, don't restore build cache.
               // Else, don't restore toolchain cache and use build cache.
-              if ( !build_restore_key.includes(toolchain_version) || ${{ github.event.inputs.needclean == 'true' }} ) {
+              if ( !build_restore_key.includes(toolchain_version) || ${{ inputs.needclean == true }} ) {
                 build_restore_key="";
                 key_suffix=toolchain_version;  // only use same version cache as toolchain-version
                 restore_suffix="-only-use-primaryKey-";  // make restore-keys can't hit
@@ -275,7 +261,7 @@ jobs:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/build${{ matrix.bit }}
           key: ${{ env.toolchain_restore_key }}
       - name: Restore Build Cache
-        if: ${{ github.event.inputs.needclean != 'true' && env.build_restore_key != '' }}
+        if: ${{ inputs.needclean != true && env.build_restore_key != '' }}
         uses: actions/cache/restore@v3.3.2
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/build${{ matrix.bit }}
@@ -505,7 +491,7 @@ jobs:
   publish_release:
     name: Publish release
     needs: [build_mpv,params]
-    if: ${{ (github.event.inputs.release != null && github.event.inputs.release == 'true') || (github.event.inputs.release == null && fromJson(needs.params.outputs.params).release == 'true') }}
+    if: ${{ inputs.release == true }}
     runs-on: ubuntu-latest
 
     steps:
@@ -524,11 +510,16 @@ jobs:
             if ( files.length == 0 ) {
               core.setFailed("Artifact does not exist!");
             }
-      - name: Get current time
+      - name: Get current time & Params
         run: |
+          echo "sha=${{ needs.params.outputs.sha }}" >> $GITHUB_ENV
+          echo "winbuild_repo=${{ inputs.winbuild_repo }}" >> $GITHUB_ENV
+          echo "winbuild_ref=${{ inputs.winbuild_ref }}" >> $GITHUB_ENV
+          echo "mpv_owner=${{ fromJson(needs.params.outputs.params).mpv_owner }}" >> $GITHUB_ENV
+          echo "mpv_ref=${{ fromJson(needs.params.outputs.params).mpv_ref }}" >> $GITHUB_ENV
           echo "long_time=$(date "+%Y-%m-%d %H:%M")" >> $GITHUB_ENV
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
-          echo "tag_name=$(date "+%Y-%m-%d")-$(head -c 7 <<< "${{ fromJson(needs.params.outputs.params).sha }}")"  >> $GITHUB_ENV
+          echo "tag_name=$(date "+%Y-%m-%d")-$(head -c 7 <<< "${{ needs.params.outputs.sha }}")"  >> $GITHUB_ENV
 
       - name: Commit version & remove existing tag
         env:
@@ -555,16 +546,18 @@ jobs:
         uses: actions/github-script@v6
         with:
           script: |
-            const sha = `${{ fromJson(needs.params.outputs.params).sha }}`;
-            const winbuild_repo = `${{ fromJson(needs.params.outputs.params).winbuild_repo }}`;
-            const winbuild_ref = `${{ fromJson(needs.params.outputs.params).winbuild_ref }}`;
+            const sha = `${{ env.sha }}`;
+            const winbuild_repo = `${{ env.winbuild_repo }}`;
+            const winbuild_ref = `${{ env.winbuild_ref }}`;
+            const winbuildrepo = `${{ env.winbuildrepo }}`;
+            const winbuildref = `${{ env.winbuildref }}`;
             let note = "";
-            if ( winbuild_repo == 'dyphire/mpv-winbuild-cmake' && winbuild_ref == 'patch' ) {
+            if ( winbuild_repo == winbuildrepo && winbuild_ref == winbuildref ) {
               note+=`**MPV Git commit**: https://github.com/dyphire/mpv/commit/${sha}\n`;
               note+="**Changed**\n";
               note+="- LuaSocket is built and included, so [simple-mpv-webui](https://github.com/open-dynaMIX/simple-mpv-webui) can be used out of the box\n";
-              note+="- Merged: https://github.com/mpv-player/mpv/pull/8845, https://github.com/mpv-player/mpv/pull/9664, https://github.com/mpv-player/mpv/pull/10316, https://github.com/mpv-player/mpv/pull/10862 \n";
-              note+="- Test: add `--icy-codepage`,`--secondary-sub-override` and `--sub-ass-feature-*` options\n\n";
+              note+="- Merged: https://github.com/mpv-player/mpv/pull/10316, https://github.com/mpv-player/mpv/pull/10862 \n";
+              note+="- Test: add `--secondary-sub-override` and `--sub-ass-feature-*` options\n\n";
               note+="**Fixes and Minor Enhancements**\n";
               note+="- davs2: enable 10bit\n";
               note+="- libass: parse script properties even if missing '[Script Info]'\n";
@@ -583,7 +576,7 @@ jobs:
 
       - name: Create release for dyphire/mpv
         uses: ncipollo/release-action@v1
-        if: ${{ ( fromJson(needs.params.outputs.params).winbuild_repo == 'dyphire/mpv-winbuild-cmake' && fromJson(needs.params.outputs.params).winbuild_ref == 'patch' ) }}
+        if: ${{ ( inputs.winbuild_repo == env.winbuildrepo && inputs.winbuild_ref == env.winbuildref ) }}
         with:
           artifacts: "artifacts/*/mpv*.7z,artifacts/*/ffmpeg*.7z"
           commit: version
@@ -598,7 +591,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Create release for mpv-player/mpv
         uses: ncipollo/release-action@v1
-        if: ${{ ( fromJson(needs.params.outputs.params).winbuild_repo == 'shinchiro/mpv-winbuild-cmake') }}
+        if: ${{ inputs.winbuild_repo != env.winbuildrepo || inputs.winbuild_ref != env.winbuildref }}
         with:
           artifacts: "artifacts/*/mpv*.7z,artifacts/*/ffmpeg*.7z"
           commit: version
@@ -614,7 +607,6 @@ jobs:
       - name: Prune old releases
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        if: ${{ (github.event.inputs.prune != null && github.event.inputs.prune == 'true') || (github.event.inputs.release == null && fromJson(needs.params.outputs.params).prune == 'true') }}
         shell: bash
         run: |
           git checkout master
