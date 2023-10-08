@@ -1,5 +1,4 @@
 name: autobuild
-run-name: "${{ format('{0} ({1})', github.workflow, 'gcc') }}"
 
 on: 
    schedule:
@@ -23,7 +22,7 @@ jobs:
               winbuild_repo: "dyphire/mpv-winbuild-cmake",
               winbuild_ref: "patch",
               build_target: "all-64bit",
-              compiler: "gcc",
+              compiler: "clang",
               needclean: false,
               no_save_cache: false,
               release: true
