@@ -55,7 +55,7 @@ build() {
     fi
     cmake -DTARGET_ARCH=$arch-w64-mingw32 $gcc_arch -DCOMPILER_TOOLCHAIN=$compiler $clang_option -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$srcdir -DRUSTUP_LOCATION=$buildroot/install_rustup -G Ninja -H$gitdir -B$buildroot/build$bit
 
-    ninja -C $buildroot/build$bit {libzvbi,libopenmpt}-removeprefix || true
+    ninja -C $buildroot/build$bit {libzvbi,libopenmpt,luajit,luasocket}-removeprefix || true
     ninja -C $buildroot/build$bit download || true
     if [ "$compiler" == "gcc" ] && [ ! "$(ls -A $buildroot/build$bit/install/bin)" ]; then
         ninja -C $buildroot/build$bit gcc
