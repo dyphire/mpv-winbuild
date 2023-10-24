@@ -7,7 +7,7 @@
 
 set -e
 git fetch --tags
-TAGS=( $(git tag | sort -r) )
+TAGS=( $(git tag -l "mpv_own-*" | sort -r) )
 
 KEEP_LATEST=30
 KEEP_MONTHLY=12
@@ -23,7 +23,7 @@ for TAG in ${TAGS[@]}; do
     fi
 
     if [[ ${#MONTHLY_TAGS[@]} -lt ${KEEP_MONTHLY} ]]; then
-        TAG_MONTH="$(echo $TAG | cut -d- -f2)"
+        TAG_MONTH="$(echo $TAG | cut -d- -f3)"
 
         if [[ ${TAG_MONTH} != ${CUR_MONTH} ]]; then
             CUR_MONTH="${TAG_MONTH}"
