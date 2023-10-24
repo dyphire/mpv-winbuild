@@ -231,7 +231,7 @@ jobs:
             llvm-
           lookup-only: true
       - name: Restore clang sysroot cache
-        if: ${{ inputs.compiler =='clang' }}
+        if: ${{ inputs.compiler =='clang' && inputs.no_save_cache != true }}
         uses: actions/cache/restore@v3.3.2
         with: 
           path: ${{ github.workspace }}/mpv-winbuild-cmake/clang_root
