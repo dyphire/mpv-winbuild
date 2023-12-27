@@ -70,10 +70,6 @@ build() {
     ninja -C $buildroot/build$bit update
     ninja -C $buildroot/build$bit mpv-fullclean
 
-    if [ "$compiler" == "clang" ]; then
-        clang_option+=('-DCLANG_FLAGS=-fdata-sections -ffunction-sections' '-DLLD_FLAGS=--gc-sections')
-        cmake -DTARGET_ARCH=$arch-w64-mingw32 $gcc_arch -DCOMPILER_TOOLCHAIN=$compiler "${clang_option[@]}" -DALWAYS_REMOVE_BUILDFILES=ON -DSINGLE_SOURCE_LOCATION=$srcdir -DRUSTUP_LOCATION=$buildroot/install_rustup -G Ninja -H$gitdir -B$buildroot/build$bit
-    fi
     ninja -C $buildroot/build$bit libjxl
     ninja -C $buildroot/build$bit vulkan
     ninja -C $buildroot/build$bit mpv || ninja -C $buildroot/build$bit mpv
