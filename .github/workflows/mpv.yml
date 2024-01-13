@@ -517,11 +517,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
+          pattern: '{mpv,ffmpeg}*'
+          merge-multiple: true
       - name: "Check artifacts"
         uses: actions/github-script@v7
         with:
           script: |
-            const globber = await glob.create(`artifacts/*/mpv*.7z`);
+            const globber = await glob.create(`artifacts/mpv*.7z`);
             const files = await globber.glob();
             if ( files.length == 0 ) {
               core.setFailed("Artifact does not exist!");
@@ -591,7 +593,7 @@ jobs:
         uses: ncipollo/release-action@v1
         if: ${{ ( inputs.winbuild_repo == env.winbuildrepo && inputs.winbuild_ref == env.winbuildref ) }}
         with:
-          artifacts: "artifacts/*/mpv*.7z,artifacts/*/ffmpeg*.7z"
+          artifacts: "artifacts/mpv*.7z,artifacts/ffmpeg*.7z"
           commit: version
           name: "MPV_OWN ${{ env.long_time }}"
           body: "${{ steps.note.outputs.note }}"
@@ -606,7 +608,7 @@ jobs:
         uses: ncipollo/release-action@v1
         if: ${{ inputs.winbuild_repo != env.winbuildrepo || inputs.winbuild_ref != env.winbuildref }}
         with:
-          artifacts: "artifacts/*/mpv*.7z,artifacts/*/ffmpeg*.7z"
+          artifacts: "artifacts/mpv*.7z,artifacts/ffmpeg*.7z"
           commit: version
           name: "MPV ${{ env.long_time }}"
           body: "${{ steps.note.outputs.note }}"
