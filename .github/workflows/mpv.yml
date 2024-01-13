@@ -159,6 +159,7 @@ jobs:
           repository: ${{ inputs.winbuild_repo }}
           ref: ${{ inputs.winbuild_ref }}
           path: mpv-winbuild-cmake
+          fetch-depth: 0
       - name: Ccache
         run: |
           sed -i '/ccache_conf.in/d'  mpv-winbuild-cmake/CMakeLists.txt
