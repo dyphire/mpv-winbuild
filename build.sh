@@ -59,7 +59,7 @@ build() {
     ninja -C $buildroot/build$bit download || true
     if [ "$compiler" == "gcc" ] && [ -f "$buildroot/build$bit/install/bin/cross-gcc" ]; then
         ninja -C $buildroot/build$bit gcc && rm -rf $buildroot/build$bit//toolchain
-    elif [ "$compiler" == "clang" ] && [ ! "$(ls -A $clang_root/bin)" ]; then
+    elif [ "$compiler" == "clang" ] && [ ! "$(ls -A $clang_root/bin/clang)" ]; then
         ninja -C $buildroot/build$bit llvm && ninja -C $buildroot/build$bit llvm-clang
     fi
 
