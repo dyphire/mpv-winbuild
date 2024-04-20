@@ -574,6 +574,7 @@ jobs:
             if ( winbuild_repo == winbuildrepo && winbuild_ref == winbuildref ) {
               note+=`**MPV Git commit**: https://github.com/dyphire/mpv/commit/${sha}\n`;
               note+="**Changed**\n";
+              note+="- LuaSocket is built and included, so [simple-mpv-webui](https://github.com/open-dynaMIX/simple-mpv-webui) can be used out of the box\n\n";
               note+="**Fixes and Minor Enhancements**\n";
               note+="- davs2: enable 10bit\n";
               note+="- libass: parse script properties even if missing '[Script Info]'\n";
