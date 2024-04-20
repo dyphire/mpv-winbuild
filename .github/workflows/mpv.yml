@@ -54,8 +54,8 @@ on:
 env:
   winbuildrepo: 'dyphire/mpv-winbuild-cmake'
   winbuildref: 'patch'
-  mpvowner: 'dyphire'
-  mpvref: 'patch'
+  mpvowner: 'mpv-player'
+  mpvref: 'master'
 
 jobs:
   # https://github.com/actions/runner/issues/480#issuecomment-1055373623
@@ -572,7 +572,7 @@ jobs:
             const winbuildref = `${{ env.winbuildref }}`;
             let note = "";
             if ( winbuild_repo == winbuildrepo && winbuild_ref == winbuildref ) {
-              note+=`**MPV Git commit**: https://github.com/dyphire/mpv/commit/${sha}\n`;
+              note+=`**MPV Git commit**: https://github.com/mpv-player/mpv/commit/${sha}\n`;
               note+="**Changed**\n";
               note+="- LuaSocket is built and included, so [simple-mpv-webui](https://github.com/open-dynaMIX/simple-mpv-webui) can be used out of the box\n\n";
               note+="**Fixes and Minor Enhancements**\n";
@@ -591,7 +591,7 @@ jobs:
             note+="**Build Details**: https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}\n";
             core.setOutput("note", note);
 
-      - name: Create release for dyphire/mpv
+      - name: Create release for mpv_own
         uses: ncipollo/release-action@v1
         if: ${{ ( inputs.winbuild_repo == env.winbuildrepo && inputs.winbuild_ref == env.winbuildref ) }}
         with:
