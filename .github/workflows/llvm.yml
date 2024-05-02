@@ -59,7 +59,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo pacman -Syu --noconfirm
-          sudo pacman -S --noconfirm --needed git ninja cmake meson clang lld libc++ llvm wget mimalloc
+          sudo pacman -S --noconfirm --needed git ninja cmake meson wget mimalloc go
           mkdir -p /home/opt/7zip
           wget -qO - https://www.7-zip.org/a/7z2301-linux-x64.tar.xz | tar -xJf - -C /home/opt/7zip 7zzs
           sudo ln -s /home/opt/7zip/7zzs /usr/bin/7z
@@ -68,6 +68,9 @@ jobs:
           git config --global pull.rebase true
           git config --global rebase.autoStash true
           git config --global fetch.prune true
+          sudo GOBIN=/usr/bin go install go.chromium.org/luci/cipd/client/cmd/...@latest
+          sudo cipd install fuchsia/third_party/clang/linux-amd64 latest -root /usr/local/fuchsia-clang
+          echo "PATH=/usr/local/fuchsia-clang/bin:$PATH" >> $GITHUB_ENV
       - uses: actions/checkout@v4
       - name: Checkout toolchain
         uses: actions/checkout@v4
@@ -108,8 +111,8 @@ jobs:
         with:
           bit: "64-v3"
           compiler: "clang"
-          command: "ninja -C $buildroot/build$bit llvm"
-          extra_option: "-DLLVM_ENABLE_PGO=USE -DLLVM_PROFDATA_FILE=$buildroot/llvm.profdata"
+          command: "ninja -C $buildroot/build$bit llvm && rm -rf clang_root/llvm-thinlto || true"
+          extra_option: "-DLLVM_ENABLE_PGO=USE -DLLVM_ENABLE_LTO=Thin -DLLVM_PROFDATA_FILE=$buildroot/llvm.profdata"
 
       - name: Save llvm cache
         uses: actions/cache/save@v4.0.2
@@ -135,6 +138,8 @@ jobs:
     needs: [build_llvm]
     if: ${{ always() && inputs.trigger_toolchain && !inputs.no_save_cache && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') }}
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
 
     steps:
       - name: Trigger Toolchain build workflow
