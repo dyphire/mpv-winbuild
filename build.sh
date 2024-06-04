@@ -67,6 +67,7 @@ build() {
         ninja -C $buildroot/build$bit rustup-fullclean
         ninja -C $buildroot/build$bit rustup
     fi
+    ninja -C $buildroot/build$bit rebuild_cache
     ninja -C $buildroot/build$bit update
     ninja -C $buildroot/build$bit mpv-fullclean
 
