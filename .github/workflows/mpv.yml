@@ -291,6 +291,7 @@ jobs:
           bit="${{ matrix.bit }}"
           compiler="${{ inputs.compiler }}"
           gitdir=$(pwd)
+          clang_root=$(pwd)/clang_root
           buildroot=$(pwd)
           srcdir=$(pwd)/src_packages
           builddir=$buildroot/build$bit
