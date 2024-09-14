@@ -1,0 +1,53 @@
+From b5fe19f7161d3de148512f5523c4b90c2ad60e84 Mon Sep 17 00:00:00 2001
+From: dyphire <qimoge@gmail.com>
+Date: Sat, 14 Sep 2024 18:40:08 +0800
+Subject: [PATCH] libass: add per-event multithreaded rendering
+
+---
+ packages/libass.cmake | 23 ++++++++++-------------
+ 1 file changed, 10 insertions(+), 13 deletions(-)
+
+diff --git a/packages/libass.cmake b/packages/libass.cmake
+index 92d1438..5e6a57c 100644
+--- a/packages/libass.cmake
++++ b/packages/libass.cmake
+@@ -6,26 +6,23 @@ ExternalProject_Add(libass
+         libiconv
+         fontconfig
+         libunibreak
+-    GIT_REPOSITORY https://github.com/libass/libass.git
++    GIT_REPOSITORY https://github.com/rcombs/libass.git
+     SOURCE_DIR ${SOURCE_LOCATION}
+     GIT_CLONE_FLAGS "--filter=tree:0"
++    GIT_REMOTE_NAME origin
++    GIT_TAG threading
+     PATCH_COMMAND ${EXEC} git am --3way ${CMAKE_CURRENT_SOURCE_DIR}/libass-*.patch
+     UPDATE_COMMAND ""
+-    CONFIGURE_COMMAND ${EXEC} CONF=1 meson setup <BINARY_DIR> <SOURCE_DIR>
++    CONFIGURE_COMMAND ${EXEC} autoreconf -fi && CONF=1 <SOURCE_DIR>/configure
++        --host=${TARGET_ARCH}
+         --prefix=${MINGW_INSTALL_PREFIX}
+-        --libdir=${MINGW_INSTALL_PREFIX}/lib
+-        --cross-file=${MESON_CROSS}
+-        --buildtype=release
+-        --default-library=static
+-        -Dfontconfig=enabled
+-        -Ddirectwrite=enabled
+-        -Dasm=enabled
+-        -Dlibunibreak=enabled
+-    BUILD_COMMAND ${EXEC} ninja -C <BINARY_DIR>
+-    INSTALL_COMMAND ${EXEC} ninja -C <BINARY_DIR> install
++        --disable-shared
++        CFLAGS='-Wno-error=int-conversion'
++    BUILD_COMMAND ${MAKE}
++    INSTALL_COMMAND ${MAKE} install
++    BUILD_IN_SOURCE 1
+     LOG_DOWNLOAD 1 LOG_UPDATE 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+ )
+ 
+ force_rebuild_git(libass)
+-force_meson_configure(libass)
+ cleanup(libass install)
+-- 
+2.46.0.windows.1
+
