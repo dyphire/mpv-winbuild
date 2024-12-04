@@ -509,7 +509,7 @@ jobs:
   publish_release:
     name: Publish release
     needs: [build_mpv,params]
-    if: ${{ inputs.release == true }}
+    if: ${{ inputs.release != false }}
     runs-on: ubuntu-latest
 
     steps:
