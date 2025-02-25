@@ -1,6 +1,11 @@
 name: MPV
 run-name: "${{ format('{0} ({1})', github.workflow, inputs.compiler) }}"
 
+permissions:
+  actions: write
+  attestations: write
+  contents: write
+
 on: 
 #  schedule:
 #    - cron: '0 8 * * *'
@@ -65,6 +70,7 @@ jobs:
       sha: ${{ steps.script.outputs.sha }}
       params: ${{ steps.env-vars.outputs.params }}
       matrix: ${{ steps.script.outputs.matrix }}
+      matrix_bit: ${{ steps.script.outputs.matrix_bit }}
     steps:
       - name: Set mpv_owner
         run: |
@@ -216,24 +222,6 @@ jobs:
             core.exportVariable( `key_suffix`, key_suffix );
             core.exportVariable( `restore_suffix`, restore_suffix );
 
-      - name: Keep inital clang sysroot cache alive
-        if: ${{ inputs.compiler =='clang' && env.toolchain_version  }}
-        uses: actions/cache/restore@v4.0.2
-        with: 
-          path: ${{ github.workspace }}/mpv-winbuild-cmake/clang_root
-          key: ${{ matrix.bit }}-clang_root-${{ env.toolchain_version }}
-          restore-keys: |
-            ${{ matrix.bit }}-clang_root-${{ env.toolchain_version }}
-          lookup-only: true
-      - name: Keep llvm cache alive
-        if: ${{ inputs.compiler =='clang' }}
-        uses: actions/cache/restore@v4.0.2
-        with: 
-          path: mpv-winbuild-cmake/clang_root
-          key: llvm-${{ env.toolchain_version }}
-          restore-keys: |
-            llvm-
-          lookup-only: true
       - name: Restore clang sysroot cache
         if: ${{ inputs.compiler =='clang' && inputs.no_save_cache != true }}
         uses: actions/cache/restore@v4.0.2
@@ -629,3 +617,74 @@ jobs:
         run: |
           git checkout master
           bash prunetags.sh
+
+  cache:
+    name: keep cache alive
+    needs: [params,build_mpv]
+    if: ${{ inputs.no_save_cache != true }}
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux/archlinux:base-devel
+    continue-on-error: true
+    strategy:
+      matrix: ${{ fromJson(needs.params.outputs.matrix_bit) }}
+
+    steps:
+      - name: Prepare
+        run: |
+          sudo pacman -Syu --noconfirm
+          sudo pacman -S --noconfirm --needed git curl
+      - uses: actions/checkout@v4
+
+      - name: Resave Toolchain Cache
+        id: toolchain
+        uses: ./action/resave_cache
+        with:
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/build${{ matrix.bit }}
+          key: toolchain-${{ inputs.compiler }}-build${{ matrix.bit }}-
+          restore-keys: toolchain-${{ inputs.compiler }}-build${{ matrix.bit }}-
+
+      - name: Generate cache key
+        id: generate_key
+        uses: actions/github-script@v7
+        with:
+          script: |
+            let toolchain_restore_key="${{ steps.toolchain.outputs.cache-matched-key }}";
+            
+            if (toolchain_restore_key) {
+              const toolchain_version = toolchain_restore_key.split("-build${{ matrix.bit }}-").at(-1);
+              core.exportVariable( `toolchain_version`, toolchain_version );
+            }
+      - name: Resave inital clang sysroot cache
+        id: clang_root
+        if: ${{ inputs.compiler =='clang' && env.toolchain_version  }}
+        uses: ./action/resave_cache
+        with: 
+          path: ${{ github.workspace }}/mpv-winbuild-cmake/clang_root
+          key: ${{ matrix.bit }}-clang_root-${{ env.toolchain_version }}
+          restore-keys: ${{ matrix.bit }}-clang_root-${{ env.toolchain_version }}
+
+  cache_llvm:
+    name: keep llvm cache alive
+    needs: [params,build_mpv]
+    if: ${{ inputs.no_save_cache != true && inputs.compiler =='clang' }}
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux/archlinux:base-devel
+    continue-on-error: true
+
+    steps:
+      - name: Prepare
+        run: |
+          sudo pacman -Syu --noconfirm
+          sudo pacman -S --noconfirm --needed git curl
+      - uses: actions/checkout@v4
+      
+      - name: Resave llvm cache
+        id: llvm
+        continue-on-error: true
+        uses: ./action/resave_cache
+        with: 
+          path: mpv-winbuild-cmake/clang_root
+          key: llvm-
+          restore-keys: llvm-
