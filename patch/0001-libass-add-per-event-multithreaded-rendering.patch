@@ -1,17 +1,17 @@
-From b5fe19f7161d3de148512f5523c4b90c2ad60e84 Mon Sep 17 00:00:00 2001
+From cd8262f0d8646eaf7a2824a2154053d0155817f7 Mon Sep 17 00:00:00 2001
 From: dyphire <qimoge@gmail.com>
-Date: Sat, 14 Sep 2024 18:40:08 +0800
+Date: Fri, 28 Feb 2025 12:32:51 +0800
 Subject: [PATCH] libass: add per-event multithreaded rendering
 
 ---
- packages/libass.cmake | 23 ++++++++++-------------
- 1 file changed, 10 insertions(+), 13 deletions(-)
+ packages/libass.cmake | 28 ++++++++++------------------
+ 1 file changed, 10 insertions(+), 18 deletions(-)
 
 diff --git a/packages/libass.cmake b/packages/libass.cmake
-index 92d1438..5e6a57c 100644
+index e31f101..5e6a57c 100644
 --- a/packages/libass.cmake
 +++ b/packages/libass.cmake
-@@ -6,26 +6,23 @@ ExternalProject_Add(libass
+@@ -6,31 +6,23 @@ ExternalProject_Add(libass
          libiconv
          fontconfig
          libunibreak
@@ -35,6 +35,11 @@ index 92d1438..5e6a57c 100644
 -        -Ddirectwrite=enabled
 -        -Dasm=enabled
 -        -Dlibunibreak=enabled
+-        -Dtest=disabled
+-        -Dcompare=disabled
+-        -Dprofile=disabled
+-        -Dfuzz=disabled
+-        -Dcheckasm=disabled
 -    BUILD_COMMAND ${EXEC} ninja -C <BINARY_DIR>
 -    INSTALL_COMMAND ${EXEC} ninja -C <BINARY_DIR> install
 +        --disable-shared
@@ -49,5 +54,5 @@ index 92d1438..5e6a57c 100644
 -force_meson_configure(libass)
  cleanup(libass install)
 -- 
-2.46.0.windows.1
+2.47.0.windows.1
 
