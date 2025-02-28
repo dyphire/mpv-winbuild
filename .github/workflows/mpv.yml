@@ -70,7 +70,6 @@ jobs:
       sha: ${{ steps.script.outputs.sha }}
       params: ${{ steps.env-vars.outputs.params }}
       matrix: ${{ steps.script.outputs.matrix }}
-      matrix_bit: ${{ steps.script.outputs.matrix_bit }}
     steps:
       - name: Set mpv_owner
         run: |
@@ -627,7 +626,7 @@ jobs:
       image: archlinux/archlinux:base-devel
     continue-on-error: true
     strategy:
-      matrix: ${{ fromJson(needs.params.outputs.matrix_bit) }}
+      matrix: ${{ fromJson(needs.params.outputs.matrix) }}
 
     steps:
       - name: Prepare
