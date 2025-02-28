@@ -2,8 +2,8 @@ name: toolchain
 run-name: "${{ inputs.run_name != '' && format('{0} ({1})', inputs.run_name, inputs.compiler) || format('{0} ({1})', github.workflow, inputs.compiler) }}"
 
 on: 
-  # schedule:
-  #   - cron:  '0 12 * * *'
+  schedule:
+    - cron: '0 7 1 * *'
   workflow_dispatch:
     inputs:
       build_target:
