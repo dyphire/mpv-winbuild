@@ -92,7 +92,7 @@ zip() {
     rm -rf $buildroot/build$bit/mpv-debug-*
     mv $buildroot/build$bit/mpv-* $gitdir/release
     cd ./release/mpv-packaging-master
-    cp -r ./mpv-root/* ./$arch/d3dcompiler_43.dll ../mpv-$arch$x86_64_level*
+    cp -r ./mpv-root/* ../mpv-$arch$x86_64_level*
     cd ..
     for dir in ./mpv*$arch$x86_64_level*; do
         if [ -d $dir ]; then
@@ -123,7 +123,6 @@ prepare() {
     cd ./release
     download_mpv_package
     cd ./mpv-packaging-master
-    7z x -y ./d3dcompiler*.7z
     cd ../..
 }
 
