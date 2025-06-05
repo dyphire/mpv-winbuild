@@ -1,22 +1,172 @@
-From ab6c2698c5a64685049aea001e215a24d4539167 Mon Sep 17 00:00:00 2001
+From 9b1bc1f223fe4e9bfdd37eb167c750754f8c819f Mon Sep 17 00:00:00 2001
 From: dyphire <qimoge@gmail.com>
-Date: Thu, 5 Jun 2025 16:00:37 +0800
+Date: Thu, 5 Jun 2025 21:57:28 +0800
 Subject: [PATCH] test
 
 ---
- packages/mpv.cmake | 2 ++
- 1 file changed, 2 insertions(+)
+ ...-corrupted-SDR-output-on-HDR-display.patch |  33 ++++++
+ ...an-option-to-control-bitmap-subtitle.patch | 101 ++++++++++++++++++
+ packages/mpv.cmake                            |   2 +
+ 3 files changed, 136 insertions(+)
+ create mode 100644 packages/mpv-0001-vo_gpu_next-fix-corrupted-SDR-output-on-HDR-display.patch
+ create mode 100644 packages/mpv-0002-vo_gpu_next-add-an-option-to-control-bitmap-subtitle.patch
 
+diff --git a/packages/mpv-0001-vo_gpu_next-fix-corrupted-SDR-output-on-HDR-display.patch b/packages/mpv-0001-vo_gpu_next-fix-corrupted-SDR-output-on-HDR-display.patch
+new file mode 100644
+index 0000000..15beeff
+--- /dev/null
++++ b/packages/mpv-0001-vo_gpu_next-fix-corrupted-SDR-output-on-HDR-display.patch
+@@ -0,0 +1,33 @@
++From fc08d47195cdd0ca70411194e90e2ddf8371a66a Mon Sep 17 00:00:00 2001
++From: dyphire <qimoge@gmail.com>
++Date: Thu, 5 Jun 2025 20:46:21 +0800
++Subject: [PATCH 1/2] vo_gpu_next: fix corrupted SDR output on HDR display
++ device
++
++always specify a default target-peak of 203 for the
++SDR output to ensure a good display
++
++Fixes https://github.com/mpv-player/mpv/issues/15411
++See-Also https://github.com/mpv-player/mpv/issues/16360#issuecomment-2891038681
++---
++ video/out/vo_gpu_next.c | 4 +++-
++ 1 file changed, 3 insertions(+), 1 deletion(-)
++
++diff --git a/video/out/vo_gpu_next.c b/video/out/vo_gpu_next.c
++index 0d69369a3b..438d62ae69 100644
++--- a/video/out/vo_gpu_next.c
+++++ b/video/out/vo_gpu_next.c
++@@ -995,7 +995,9 @@ static bool draw_frame(struct vo *vo, struct vo_frame *frame)
++         target_csp.hdr.min_luma = 0;
++     }
++ 
++-    float target_peak = opts->target_peak ? opts->target_peak : target_csp.hdr.max_luma;
+++    float target_peak = opts->target_peak
+++                      ? opts->target_peak
+++                      : (p->next_opts->target_hint ? target_csp.hdr.max_luma : 0);
++     struct pl_color_space hint;
++     bool target_hint = p->next_opts->target_hint == 1 ||
++                        (p->next_opts->target_hint == -1 &&
++-- 
++2.47.0.windows.1
++
+diff --git a/packages/mpv-0002-vo_gpu_next-add-an-option-to-control-bitmap-subtitle.patch b/packages/mpv-0002-vo_gpu_next-add-an-option-to-control-bitmap-subtitle.patch
+new file mode 100644
+index 0000000..2c39076
+--- /dev/null
++++ b/packages/mpv-0002-vo_gpu_next-add-an-option-to-control-bitmap-subtitle.patch
+@@ -0,0 +1,101 @@
++From b727e1b90b6decdb88c5a8dc17c44a8cb9202338 Mon Sep 17 00:00:00 2001
++From: dyphire <qimoge@gmail.com>
++Date: Thu, 5 Jun 2025 21:55:57 +0800
++Subject: [PATCH] vo_gpu_next: add an option to control bitmap subtitles peak
++ for HDR outputs
++
++---
++ video/out/vo_gpu_next.c | 18 ++++++++++++------
++ 1 file changed, 12 insertions(+), 6 deletions(-)
++
++diff --git a/video/out/vo_gpu_next.c b/video/out/vo_gpu_next.c
++index 438d62ae69..5fb560597f 100644
++--- a/video/out/vo_gpu_next.c
+++++ b/video/out/vo_gpu_next.c
++@@ -165,6 +165,7 @@ static void update_lut(struct priv *p, struct user_lut *lut);
++ 
++ struct gl_next_opts {
++     bool delayed_peak;
+++    bool image_subs_hdr_peak;
++     int border_background;
++     float corner_rounding;
++     bool inter_preserve;
++@@ -186,6 +187,7 @@ const struct m_opt_choice_alternatives lut_types[] = {
++ #define OPT_BASE_STRUCT struct gl_next_opts
++ const struct m_sub_options gl_next_conf = {
++     .opts = (const struct m_option[]) {
+++        {"image-subs-hdr-peak", OPT_BOOL(image_subs_hdr_peak)},
++         {"allow-delayed-peak-detect", OPT_BOOL(delayed_peak)},
++         {"border-background", OPT_CHOICE(border_background,
++             {"none",  BACKGROUND_NONE},
++@@ -206,6 +208,7 @@ const struct m_sub_options gl_next_conf = {
++     .defaults = &(struct gl_next_opts) {
++         .border_background = BACKGROUND_COLOR,
++         .inter_preserve = true,
+++        .image_subs_hdr_peak = true,
++     },
++     .size = sizeof(struct gl_next_opts),
++     .change_flags = UPDATE_VIDEO,
++@@ -288,7 +291,7 @@ static struct mp_image *get_image(struct vo *vo, int imgfmt, int w, int h,
++ static void update_overlays(struct vo *vo, struct mp_osd_res res,
++                             int flags, enum pl_overlay_coords coords,
++                             struct osd_state *state, struct pl_frame *frame,
++-                            struct mp_image *src)
+++                            struct mp_image *src, bool target_hint)
++ {
++     struct priv *p = vo->priv;
++     double pts = src ? src->pts : 0;
++@@ -368,7 +371,8 @@ static void update_overlays(struct vo *vo, struct mp_osd_res res,
++                 // Seems like HDR subtitles are targeting SDR white
++                 if (pl_color_transfer_is_hdr(ol->color.transfer)) {
++                     ol->color.hdr = (struct pl_hdr_metadata) {
++-                        .max_luma = PL_COLOR_SDR_WHITE,
+++                        .max_luma = (!target_hint || p->next_opts->image_subs_hdr_peak)
+++                                    ? PL_COLOR_SDR_WHITE : 0.0f,
++                     };
++                 }
++             }
++@@ -1046,7 +1050,8 @@ static bool draw_frame(struct vo *vo, struct vo_frame *frame)
++     apply_target_options(p, &target, target_peak, target_csp.hdr.min_luma);
++     update_overlays(vo, p->osd_res,
++                     (frame->current && opts->blend_subs) ? OSD_DRAW_OSD_ONLY : 0,
++-                    PL_OVERLAY_COORDS_DST_FRAME, &p->osd_state, &target, frame->current);
+++                    PL_OVERLAY_COORDS_DST_FRAME, &p->osd_state, &target, frame->current
+++                    , target_hint);
++     apply_crop(&target, p->dst, swframe.fbo->params.w, swframe.fbo->params.h);
++     update_tm_viz(&pars->color_map_params, &target);
++ 
++@@ -1117,7 +1122,7 @@ static bool draw_frame(struct vo *vo, struct vo_frame *frame)
++                     };
++                     update_overlays(vo, res, OSD_DRAW_SUB_ONLY,
++                                     PL_OVERLAY_COORDS_DST_CROP,
++-                                    &fp->subs, image, mpi);
+++                                    &fp->subs, image, mpi, target_hint);
++                     fp->osd_sync = p->osd_sync;
++                 }
++             } else {
++@@ -1436,6 +1441,7 @@ static void video_screenshot(struct vo *vo, struct voctrl_screenshot *args)
++         osd_flags |= OSD_DRAW_SUB_ONLY;
++ 
++     struct frame_priv *fp = mpi->priv;
+++    bool target_hint = false;
++     if (opts->blend_subs) {
++         float rx = pl_rect_w(dst) / pl_rect_w(image.crop);
++         float ry = pl_rect_h(dst) / pl_rect_h(image.crop);
++@@ -1450,11 +1456,11 @@ static void video_screenshot(struct vo *vo, struct voctrl_screenshot *args)
++         };
++         update_overlays(vo, res, osd_flags,
++                         PL_OVERLAY_COORDS_DST_CROP,
++-                        &fp->subs, &image, mpi);
+++                        &fp->subs, &image, mpi, target_hint);
++     } else {
++         // Disable overlays when blend_subs is disabled
++         update_overlays(vo, osd, osd_flags, PL_OVERLAY_COORDS_DST_FRAME,
++-                        &p->osd_state, &target, mpi);
+++                        &p->osd_state, &target, mpi, target_hint);
++         image.num_overlays = 0;
++     }
++ 
++-- 
++2.47.0.windows.1
++
 diff --git a/packages/mpv.cmake b/packages/mpv.cmake
-index 49df758..089bd38 100644
+index 49df758..22b53bd 100644
 --- a/packages/mpv.cmake
 +++ b/packages/mpv.cmake
 @@ -26,6 +26,8 @@ ExternalProject_Add(mpv
      GIT_REPOSITORY https://github.com/mpv-player/mpv.git
      SOURCE_DIR ${SOURCE_LOCATION}
      GIT_CLONE_FLAGS "--filter=tree:0"
-+    PATCH_COMMAND ${EXEC} curl -sL https://github.com/mpv-player/mpv/pull/15936.patch | git am --3way --whitespace=fix
-+          COMMAND ${EXEC} curl -sL https://github.com/mpv-player/mpv/pull/16417.patch | git am --3way --whitespace=fix
++    PATCH_COMMAND ${EXEC} git am --3way ${CMAKE_CURRENT_SOURCE_DIR}/mpv-*.patch
++          COMMAND ${EXEC} curl -sL https://github.com/mpv-player/mpv/pull/15936.patch | git am --3way --whitespace=fix
      UPDATE_COMMAND ""
      CONFIGURE_COMMAND ${EXEC} CONF=1 meson setup <BINARY_DIR> <SOURCE_DIR>
          --prefix=${MINGW_INSTALL_PREFIX}
