@@ -51,14 +51,14 @@ build() {
     local gcc_arch=$3
     
     if [ "$compiler" == "clang" ]; then
-        clang_option=(-DCMAKE_INSTALL_PREFIX=$clang_root -DMINGW_INSTALL_PREFIX=$buildroot/build$bit/install/$arch-w64-mingw32)
+        clang_option=(-DCMAKE_INSTALL_PREFIX=$clang_root -DMINGW_INSTALL_PREFIX=$buildroot/build$bit/install/$arch-w64-mingw32 -DCLANG_PACKAGES_LTO=ON)
     fi
     cmake -Wno-dev --fresh -DTARGET_ARCH=$arch-w64-mingw32 $gcc_arch -DCOMPILER_TOOLCHAIN=$compiler "${clang_option[@]}" -DENABLE_CCACHE=ON -DSINGLE_SOURCE_LOCATION=$srcdir -DRUSTUP_LOCATION=$buildroot/install_rustup -G Ninja -H$gitdir -B$buildroot/build$bit
 
-    ninja -C $buildroot/build$bit {libzvbi,libopenmpt}-removeprefix || rm -rf $srcdir/{libzvbi,libopenmpt} || true
     ninja -C $buildroot/build$bit download || true
-    if [ "$compiler" == "gcc" ] && [ -f "$buildroot/build$bit/install/bin/cross-gcc" ]; then
-        ninja -C $buildroot/build$bit gcc && rm -rf $buildroot/build$bit//toolchain
+
+    if [ "$compiler" == "gcc" ] && [ ! -f "$buildroot/build$bit/install/bin/cross-gcc" ]; then
+        ninja -C $buildroot/build$bit gcc && rm -rf $buildroot/build$bit/toolchain
     elif [ "$compiler" == "clang" ] && [ ! "$(ls -A $clang_root/bin/clang)" ]; then
         ninja -C $buildroot/build$bit llvm && ninja -C $buildroot/build$bit llvm-clang
     fi
@@ -67,14 +67,12 @@ build() {
         ninja -C $buildroot/build$bit rustup-fullclean
         ninja -C $buildroot/build$bit rustup
     fi
-    ninja -C $buildroot/build$bit rebuild_cache
     ninja -C $buildroot/build$bit update
     ninja -C $buildroot/build$bit mpv-fullclean
+    
+    ninja -C $buildroot/build$bit mpv
 
-    ninja -C $buildroot/build$bit libjxl
-    ninja -C $buildroot/build$bit vulkan
-    ninja -C $buildroot/build$bit mpv || ninja -C $buildroot/build$bit mpv
-    if [ -d $buildroot/build$bit/mpv-$arch* ] ; then
+    if [ -n "$(find $buildroot/build$bit -maxdepth 1 -type d -name "mpv*$arch*" -print -quit)" ] ; then
         echo "Successfully compiled $bit-bit. Continue"
     else
         echo "Failed compiled $bit-bit. Stop"
