@@ -1,0 +1,25 @@
+From 59fe63b35c6bba85044b7d90e1062d2cb2b50104 Mon Sep 17 00:00:00 2001
+From: dyphire <qimoge@gmail.com>
+Date: Fri, 1 May 2026 16:38:01 +0800
+Subject: [PATCH] mpv: change sha to 10 characters
+
+---
+ packages/mpv.cmake | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/packages/mpv.cmake b/packages/mpv.cmake
+index 5c49730..9d1b67e 100644
+--- a/packages/mpv.cmake
++++ b/packages/mpv.cmake
+@@ -92,7 +92,7 @@ set(RENAME ${CMAKE_CURRENT_BINARY_DIR}/mpv-prefix/src/rename.sh)
+ file(WRITE ${RENAME}
+ "#!/bin/bash
+ cd $1
+-GIT=$(git rev-parse --short=7 HEAD)
++GIT=$(git rev-parse --short=10 HEAD)
+ mv $2 $2-git-\${GIT}")
+ 
+ ExternalProject_Add_Step(mpv copy-package-dir
+-- 
+2.47.0.windows.1
+
