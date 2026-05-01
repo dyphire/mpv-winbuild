@@ -474,7 +474,7 @@ jobs:
                 [local_hash, remote_hash, status, remote] = await repo_info(dir)
                 let url = getCommitUrl(remote_hash, remote);
                 let package_name = path.basename(dir);
-                info_table.push([package_name, local_hash, status, `<a href="${url}">${remote_hash.slice(0,7)}</a>`]);
+                info_table.push([package_name, local_hash, status, `<a href="${url}">${remote_hash.slice(0,10)}</a>`]);
               }
               return info_table;
             }
@@ -488,7 +488,7 @@ jobs:
             const upstream_url = getCommitUrl(upstream_remote_hash, upstream_remote);
             
             core.summary
-              .addRaw(`mpv-winbuild-cmake: ${upstream_status} (remote:<a href="${upstream_url}">${upstream_remote_hash.slice(0,7)}</a>)`,true)
+              .addRaw(`mpv-winbuild-cmake: ${upstream_status} (remote:<a href="${upstream_url}">${upstream_remote_hash.slice(0,10)}</a>)`,true)
               .addRaw(`Compiler: ${{ inputs.compiler }}`,true);
             await core.summary.addDetails('Packages Version',packages_table).write();
 
@@ -525,7 +525,7 @@ jobs:
           echo "mpv_ref=${{ fromJson(needs.params.outputs.params).mpv_ref }}" >> $GITHUB_ENV
           echo "long_time=$(date "+%Y-%m-%d %H:%M")" >> $GITHUB_ENV
           echo "short_time=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
-          echo "tag_name=$(date "+%Y-%m-%d")-$(head -c 7 <<< "${{ needs.params.outputs.sha }}")"  >> $GITHUB_ENV
+          echo "tag_name=$(date "+%Y-%m-%d")-$(head -c 10 <<< "${{ needs.params.outputs.sha }}")"  >> $GITHUB_ENV
 
       - name: Commit version & remove existing tag
         env:
