@@ -51,7 +51,7 @@ jobs:
       cache_suffix: ${{ steps.suffix.outputs.cache_suffix }}
     steps:
       - id: script
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             let matrix = {};
@@ -88,7 +88,7 @@ jobs:
     needs: [params]
     runs-on: ubuntu-latest
     container:
-      image: archlinux/archlinux:base-devel
+      image: ghcr.io/archlinux/archlinux:base-devel
     continue-on-error: true
     strategy:
       matrix: ${{ fromJson(needs.params.outputs.matrix) }}
@@ -96,19 +96,20 @@ jobs:
     steps:
       - name: Install Dependencies
         run: |
-          sudo echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
+          sudo echo -e "[multilib]\nInclude = /etc/pacman.d/mirrorlist" | sudo tee -a /etc/pacman.conf >/dev/null
+          sudo pacman-key --init
+          sudo pacman-key --populate archlinux
           sudo pacman -Syu --noconfirm
-          sudo pacman -S --noconfirm --needed git ninja cmake wget mimalloc 7zip unzip python-pip
-          sudo python -m pip install --break-system-packages roman "meson==1.9.2"
+          sudo pacman -S --noconfirm --needed git ninja cmake meson wget mimalloc 7zip unzip
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global pull.rebase true
           git config --global rebase.autoStash true
           git config --global fetch.prune true
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Checkout toolchain
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: shinchiro/mpv-winbuild-cmake
           path: mpv-winbuild-cmake
@@ -116,7 +117,7 @@ jobs:
 
       - name: Restore llvm cache
         if: ${{ inputs.compiler =='clang' }}
-        uses: actions/cache/restore@v4.2.1
+        uses: actions/cache/restore@v5.0.5
         with: 
           fail-on-cache-miss: true
           path: |
@@ -143,14 +144,14 @@ jobs:
 
       - name: Save Toolchain Cache
         if: ${{ inputs.no_save_cache != true }}
-        uses: actions/cache/save@v4.2.1
+        uses: actions/cache/save@v5.0.5
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/build${{ matrix.bit }}
           key: toolchain-${{ inputs.compiler }}-build${{ matrix.bit }}-${{ needs.params.outputs.cache_suffix }}
 
       - name: Save clang_root cache
         if: ${{ inputs.compiler =='clang' && inputs.no_save_cache != true }}
-        uses: actions/cache/save@v4.2.1
+        uses: actions/cache/save@v5.0.5
         with: 
           path: ${{ github.workspace }}/mpv-winbuild-cmake/clang_root
           key: ${{ matrix.bit }}-clang_root-${{ needs.params.outputs.cache_suffix }}
@@ -160,7 +161,7 @@ jobs:
         run: |
           sudo 7z a logs.7z $(find mpv-winbuild-cmake -type f -iname "*-*.log" -or -wholename "*/ffbuild/config.log")
       - name: upload logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: ${{ always() }}
         with:
           name: ${{ matrix.bit }}_logs
@@ -171,23 +172,23 @@ jobs:
     needs: [params]
     runs-on: ubuntu-latest
     container:
-      image: archlinux/archlinux:base-devel
+      image: ghcr.io/archlinux/archlinux:base-devel
     continue-on-error: true
 
     steps:
       - name: Install Dependencies
         run: |
           sudo pacman -Syu --noconfirm
-          sudo pacman -S --noconfirm --needed git ninja cmake meson wget
+          sudo pacman -S --noconfirm --needed git ninja cmake meson wget unzip
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --global pull.rebase true
           git config --global rebase.autoStash true
           git config --global fetch.prune true
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Checkout toolchain
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: shinchiro/mpv-winbuild-cmake
           path: mpv-winbuild-cmake
@@ -201,7 +202,7 @@ jobs:
 
       - name: Save Rust Cache
         if: ${{ inputs.no_save_cache != true }}
-        uses: actions/cache/save@v4.2.1
+        uses: actions/cache/save@v5.0.5
         with:
           path: ${{ github.workspace }}/mpv-winbuild-cmake/install_rustup
           key: rust-${{ needs.params.outputs.cache_suffix }}
@@ -215,7 +216,7 @@ jobs:
 
     steps:
       - name: Trigger mpv build workflow
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           retries: 3
           script: |
